@@ -7,7 +7,7 @@ public class client {
     Socket socket;
     DataOutputStream out;
 
-    public client(){
+    public client() {
 
     }
 
@@ -15,7 +15,7 @@ public class client {
         socket = new Socket(serverIp, 9999);
         out = new DataOutputStream(socket.getOutputStream());
 
-        String loginInfo = member + ": " + password;
+        String loginInfo = member + " " + password;
         out.writeInt(loginInfo.length());
         out.write(loginInfo.getBytes(), 0, loginInfo.length());
     }
@@ -29,7 +29,7 @@ public class client {
     public static void main(String[] args) {
         try {
             client c = new client();
-            c.login("158.182.114.28", "haibot", "123");
+            c.login("127.0.0.1", "amy", "123");
 
             Scanner scanner = new Scanner(System.in);
             System.out.println("Please input messages:");

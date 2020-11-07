@@ -8,9 +8,8 @@ import java.util.ArrayList;
 
 public class server {
     File sharedDir;
-    File memberList;
 
-//    ServerSocket udpSocket = new ServerSocket(9998);
+    //    ServerSocket udpSocket = new ServerSocket(9998);
     ServerSocket tcpSocket = new ServerSocket(9999);
     ArrayList<Socket> list = new ArrayList<Socket>();
 
@@ -19,7 +18,8 @@ public class server {
         System.out.println("Listening at TCP port 9999...");
 
         sharedDir = new File(dirPath);
-        memberList = new File(listPath);
+
+        MemberDB memberDB = new MemberDB("members.txt");
 
         while (true) {
             Socket memberSocket = tcpSocket.accept();
@@ -30,7 +30,7 @@ public class server {
 
             Thread t = new Thread(() -> {
                 try {
-                    if (loginCheck(memberSocket))
+                    if (loginCheck(memberSocket, memberDB))
                         serve(memberSocket);
                 } catch (IOException e) {
                     System.err.println("connection dropped.");
@@ -43,20 +43,30 @@ public class server {
         }
     }
 
-    private boolean loginCheck(Socket memberSocket) throws IOException {
+    private boolean loginCheck(Socket memberSocket, MemberDB memberDB) throws IOException {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         int len = in.readInt();
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
-        String dis = new String(buffer);
+        String loginMsg = new String(buffer);
+        String[] loginInfo = loginMsg.split(" ");
 
         boolean ifLogin = false;
-        String reply = "reject";
-        if (dis.equals("haibot: 123")) {
-            ifLogin = true;
-            reply = "accept";
-            System.out.printf("Total %d clients are connected.\n", list.size());
-            System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
+        String reply = "member does not exist";
+
+        for (int i = 0; i < memberDB.getSize(); i++) {
+            if (loginInfo[0].equals(memberDB.getMember(i).getName())) {
+                if (loginInfo[1].equals(memberDB.getMember(i).getPassword())) {
+                    ifLogin = true;
+                    reply = "accept";
+                    System.out.printf("Total %d clients are connected.\n", list.size());
+                    System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
+                    break;
+                } else {
+                    reply = "wrong password";
+                    break;
+                }
+            }
         }
 
         forward(reply.getBytes(), reply.getBytes().length, memberSocket);
