@@ -19,7 +19,7 @@ public class server {
 
         sharedDir = new File(dirPath);
 
-        MemberDB memberDB = new MemberDB("members.txt");
+        MemberDB memberDB = new MemberDB(listPath);
 
         while (true) {
             Socket memberSocket = tcpSocket.accept();
@@ -74,18 +74,6 @@ public class server {
 
     }
 
-    private void serve(Socket memberSocket) throws IOException {
-        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
-        while (true) {
-            byte[] buffer = new byte[1024];
-            int len = in.readInt();
-            in.read(buffer, 0, len);
-            String option = new String(buffer);
-            System.out.println(option);
-        }
-
-    }
-
     private void forward(byte[] data, int len, Socket destSocket) {
         synchronized (list) {
             try {
@@ -99,8 +87,85 @@ public class server {
         }
     }
 
-    //test area
+    private void serve(Socket memberSocket) throws IOException {
+        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
+        while (true) {
+            byte[] buffer = new byte[1024];
+            int len = in.readInt();
+            in.read(buffer, 0, len);
+            String option = new String(buffer);
+            System.out.println(option);
+
+            //TODO: realize the option from client
+            switch (option) {
+                case "read":
+                    read();
+                    break;
+                case "create":
+                    create();
+                    break;
+                case "upload":
+                    upload();
+                    break;
+                case "download":
+                    download();
+                    break;
+                case "deleteFile":
+                    deleteFile();
+                    break;
+                case "deleteDir":
+                    deleteDir();
+                    break;
+                case "rename":
+                    rename();
+                    break;
+                case "detail":
+                    detail();
+                    break;
+                default:
+                    System.out.println("Invalid option");
+                    break;
+            }
+
+        }
+
+    }
+
+    //opyion on shared root directory
+    private void read() {
+
+    }
+
+    private void create() {
+
+    }
+
+    private void upload() {
+
+    }
+
+    private void download() {
+
+    }
+
+    private void deleteFile() {
+
+    }
+
+    private void deleteDir() {
+
+    }
+
+    private void rename() {
+
+    }
+
+    private void detail() {
+
+    }
+
+    //start server
     public static void main(String[] args) throws IOException {
-        server se = new server("", "");
+        new server(args[0], args[1]);
     }
 }
