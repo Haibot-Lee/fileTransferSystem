@@ -16,7 +16,7 @@ public class server {
 //        System.out.println("Listening at UDP port 9998...");
         System.out.println("Listening at TCP port 9999...");
 
-        sharedDir = dirPath;
+        sharedDir = dirPath + "\\";
 
         MemberDB memberDB = new MemberDB(listPath);
 
@@ -68,14 +68,16 @@ public class server {
             }
         }
 
-        reply(reply.getBytes(), reply.getBytes().length, memberSocket);
+        reply(reply, memberSocket);
         return ifLogin;
 
     }
 
-    private void reply(byte[] data, int len, Socket destSocket) {
+    private void reply(String reply, Socket destSocket) {
         synchronized (list) {
             try {
+                byte[] data = reply.getBytes();
+                int len = data.length;
                 DataOutputStream out = new DataOutputStream(destSocket.getOutputStream());
                 out.writeInt(len);
                 out.write(data, 0, len);
@@ -99,16 +101,16 @@ public class server {
             //TODO: realize the option from client
             switch (options[0]) {
                 case "read":
-                    read("test");
+                    read(options[1]);
                     break;
                 case "create":
                     create(options[1]);
                     break;
                 case "upload":
-                    upload(in);
+                    upload(memberSocket);
                     break;
                 case "download":
-                    download();
+                    download("sub", memberSocket);
                     break;
                 case "deleteFile":
                     delete(options[1]);
@@ -128,7 +130,12 @@ public class server {
 
     //option on shared root directory
     private void read(String pathname) {
-        File path = new File(pathname);
+        File path;
+        if (pathname.equals(".")) {
+            path = new File(sharedDir);
+        } else {
+            path = new File(sharedDir + pathname);
+        }
         File[] files = path.listFiles();
         ArrayList<String> info = new ArrayList<>();
 
@@ -146,42 +153,74 @@ public class server {
     }
 
     private void create(String name) {
-        File file = new File(sharedDir + "\\" + name);
+        File file = new File(sharedDir + name);
         if (file.exists()) {
             System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
         } else {
             file.mkdirs();
-            System.out.println("Created.");
+            System.out.println("Dir created");
         }
     }
 
-    private void upload(DataInputStream in) throws IOException {
+    private void upload(Socket memberSocket) throws IOException {
+        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         int len = in.readInt();
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
         String[] fileInfo = (new String(buffer)).split(" ");
-        File file = new File(sharedDir + "\\" + fileInfo[0]);
-        FileOutputStream out = new FileOutputStream(file);
-        int size = Integer.parseInt(fileInfo[1]);
+        File file = new File(sharedDir + fileInfo[0]);
 
+        FileOutputStream outFile = new FileOutputStream(file);
+        int size = Integer.parseInt(fileInfo[1]);
         int transCnt = size / 1024 + 1;
         for (int i = 0; i < transCnt; i++) {
 
             byte[] content = new byte[1024];
             int len2 = in.readInt();
             in.read(content, 0, len2);
-            out.write(content, 0, len2);
+            outFile.write(content, 0, len2);
             size -= 1024;
         }
+        outFile.close();
         System.out.println("receive one file");
     }
 
-    private void download() {
+    private void download(String name, Socket memberSocket) throws IOException {
+        DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
 
+        File file = new File(sharedDir + name);
+        if (!file.exists()) {
+            String reply = "File does not exist";
+            out.writeInt(reply.length());
+            out.write(reply.getBytes(), 0, reply.length());
+            return;
+        }
+        if (file.isDirectory()) {
+            String reply = "Can not download directory";
+            out.writeInt(reply.length());
+            out.write(reply.getBytes(), 0, reply.length());
+            return;
+        }
+
+        String fileName = file.getName();
+        long fileSize = file.length();
+        String fileInfo = String.format("%s %d", fileName, fileSize);
+        out.writeInt(fileInfo.length());
+        out.write(fileInfo.getBytes(), 0, fileInfo.length());
+
+        FileInputStream inFile = new FileInputStream(file);
+        while (fileSize > 0) {
+            byte[] buffer = new byte[1024];
+            int len = inFile.read(buffer);
+            fileSize -= len;
+            out.writeInt(len);
+            out.write(buffer, 0, len);
+        }
+        inFile.close();
     }
 
     private void delete(String name) {
-        File file = new File("test\\" + name);
+        File file = new File(sharedDir + name);
         if (file.exists()) {
             if (!file.isDirectory()) {
                 file.delete();
@@ -218,8 +257,8 @@ public class server {
     }
 
     private void rename(String sourcename, String destname) {
-        if (new File("test\\" + sourcename).exists()) {
-            new File("test\\" + sourcename).renameTo(new File("test\\" + destname));
+        if (new File(sharedDir + sourcename).exists()) {
+            new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
         } else {
             System.out.println("yje file doesn't exist");
         }

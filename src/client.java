@@ -1,5 +1,3 @@
-import sun.awt.windows.WBufferStrategy;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -7,7 +5,6 @@ import java.util.Scanner;
 public class client {
     String serverIp;
     Socket socket;
-    DataOutputStream out;
 
     public client(String serverIp) throws IOException {
         this.serverIp = serverIp;
@@ -15,7 +12,7 @@ public class client {
     }
 
     public void login(String member, String password) throws IOException {
-        out = new DataOutputStream(socket.getOutputStream());
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
         String loginInfo = member + " " + password;
         out.writeInt(loginInfo.length());
@@ -23,6 +20,7 @@ public class client {
     }
 
     public void sendCmd(String option) throws IOException {
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
         out.writeInt(option.length());
         out.write(option.getBytes(), 0, option.length());
     }
@@ -45,23 +43,51 @@ public class client {
     }
 
     public void upload(String filePath) throws IOException {
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
         File file = new File(filePath);
-
         String fileName = file.getName();
         long fileSize = file.length();
         String fileInfo = String.format("%s %d", fileName, fileSize);
         out.writeInt(fileInfo.length());
         out.write(fileInfo.getBytes(), 0, fileInfo.length());
 
-        FileInputStream in = new FileInputStream(file);
+        FileInputStream inFile = new FileInputStream(file);
         while (fileSize > 0) {
             byte[] buffer = new byte[1024];
-            int len = in.read(buffer);
+            int len = inFile.read(buffer);
             fileSize -= len;
             out.writeInt(len);
             out.write(buffer, 0, len);
         }
-        System.out.println("upload successfully");
+        inFile.close();
+    }
+
+    public void download() throws IOException {
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+        int len = in.readInt();
+        byte[] buffer = new byte[len];
+        in.read(buffer, 0, len);
+        String reply = new String(buffer);
+        if (reply.equals("File does not exist") || reply.equals("Can not download directory")) {
+            System.out.println(reply);
+        } else {
+            String[] fileInfo = reply.split(" ");
+            File file = new File("C:\\Users\\mrli\\Desktop\\" + fileInfo[0]);
+
+            FileOutputStream outFile = new FileOutputStream(file);
+            int size = Integer.parseInt(fileInfo[1]);
+            int transCnt = size / 1024 + 1;
+            for (int i = 0; i < transCnt; i++) {
+
+                byte[] content = new byte[1024];
+                int len2 = in.readInt();
+                in.read(content, 0, len2);
+                outFile.write(content, 0, len2);
+                size -= 1024;
+            }
+            outFile.close();
+            System.out.println("receive one file");
+        }
     }
 
     //test area
@@ -79,7 +105,10 @@ public class client {
                     String str = scanner.nextLine();
                     c.sendCmd(str);
                     if (str.equals("upload")) {
-                        c.upload("C:\\Users\\mrli\\Desktop\\test.txt");
+                        c.upload("C:\\Users\\mrli\\Desktop\\test.log");
+                    }
+                    if (str.equals("download")) {
+                        c.download();
                     }
                 }
             } else {
