@@ -31,7 +31,7 @@ public class server {
             Thread t = new Thread(() -> {
                 try {
                     if (loginCheck(memberSocket, memberDB))
-                        serve(memberSocket);
+                        receiveCmd(memberSocket);
                 } catch (IOException e) {
                     System.err.println("connection dropped.");
                 }
@@ -69,12 +69,12 @@ public class server {
             }
         }
 
-        forward(reply.getBytes(), reply.getBytes().length, memberSocket);
+        reply(reply.getBytes(), reply.getBytes().length, memberSocket);
         return ifLogin;
 
     }
 
-    private void forward(byte[] data, int len, Socket destSocket) {
+    private void reply(byte[] data, int len, Socket destSocket) {
         synchronized (list) {
             try {
                 DataOutputStream out = new DataOutputStream(destSocket.getOutputStream());
@@ -87,14 +87,14 @@ public class server {
         }
     }
 
-    private void serve(Socket memberSocket) throws IOException {
+    private void receiveCmd(Socket memberSocket) throws IOException {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         while (true) {
-            byte[] buffer = new byte[1024];
             int len = in.readInt();
+            byte[] buffer = new byte[len];
             in.read(buffer, 0, len);
             String option = new String(buffer);
-            System.out.println(option);
+            System.out.println("Option: " + option);
 
             //TODO: realize the option from client
             switch (option) {

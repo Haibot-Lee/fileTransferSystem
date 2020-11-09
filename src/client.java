@@ -11,22 +11,29 @@ public class client {
 
     public client(String serverIp) throws IOException {
         socket = new Socket(serverIp, 9999);
+    }
+
+    public String getReply() throws IOException {
         DataInputStream in = new DataInputStream(socket.getInputStream());
 
         Thread t = new Thread(() -> {
-            byte[] buffer = new byte[1024];
             try {
-                while (true) {
+//                while (true) {
+                    System.out.println("Waiting...");
                     int len = in.readInt();
+                    byte[] buffer = new byte[len];
                     in.read(buffer, 0, len);
                     serverReply = new String(buffer, 0, len);
-                }
+                    System.out.println(">" + serverReply);
+//                }
             } catch (IOException ex) {
                 System.err.println("Connection dropped!");
                 System.exit(-1);
             }
         });
         t.start();
+
+        return "";
     }
 
     public void login(String member, String password) throws IOException {
@@ -47,9 +54,16 @@ public class client {
         try {
             client c = new client("127.0.0.1");
             c.login("amy", "123");
+            c.getReply();
 
             boolean ifLogin = false;
+
+            int i = 0;
+            System.out.println("into while");
             while (true) {
+                i++;
+//                System.out.println(i + ": " + c.serverReply);
+                System.out.println();
                 if (!c.serverReply.equals("")) {
                     if (c.serverReply.equals("accept")) {
                         ifLogin = true;
@@ -59,8 +73,8 @@ public class client {
                     }
                 }
             }
+            System.out.println("out while");
 
-            System.out.println(c.serverReply);
             if (ifLogin) {
                 Scanner scanner = new Scanner(System.in);
                 System.out.println("Please input options:");
