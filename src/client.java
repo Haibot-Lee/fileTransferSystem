@@ -7,33 +7,26 @@ import java.util.Scanner;
 public class client {
     Socket socket;
     DataOutputStream out;
-    String serverReply = "";
 
     public client(String serverIp) throws IOException {
         socket = new Socket(serverIp, 9999);
     }
 
     public String getReply() throws IOException {
+        String reply = "";
         DataInputStream in = new DataInputStream(socket.getInputStream());
+        try {
+            int len = in.readInt();
+            byte[] buffer = new byte[len];
+            in.read(buffer, 0, len);
+            reply = new String(buffer, 0, len);
 
-        Thread t = new Thread(() -> {
-            try {
-//                while (true) {
-                    System.out.println("Waiting...");
-                    int len = in.readInt();
-                    byte[] buffer = new byte[len];
-                    in.read(buffer, 0, len);
-                    serverReply = new String(buffer, 0, len);
-                    System.out.println(">" + serverReply);
-//                }
-            } catch (IOException ex) {
-                System.err.println("Connection dropped!");
-                System.exit(-1);
-            }
-        });
-        t.start();
+        } catch (IOException ex) {
+            System.err.println("Connection dropped!");
+            System.exit(-1);
+        }
 
-        return "";
+        return reply;
     }
 
     public void login(String member, String password) throws IOException {
@@ -54,34 +47,17 @@ public class client {
         try {
             client c = new client("127.0.0.1");
             c.login("amy", "123");
-            c.getReply();
 
-            boolean ifLogin = false;
-
-            int i = 0;
-            System.out.println("into while");
-            while (true) {
-                i++;
-//                System.out.println(i + ": " + c.serverReply);
-                System.out.println();
-                if (!c.serverReply.equals("")) {
-                    if (c.serverReply.equals("accept")) {
-                        ifLogin = true;
-                        break;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            System.out.println("out while");
-
-            if (ifLogin) {
+            String reply = c.getReply();
+            if (reply.equals("accept")) {
                 Scanner scanner = new Scanner(System.in);
                 System.out.println("Please input options:");
                 while (true) {
                     String str = scanner.nextLine();
                     c.sendCmd(str);
                 }
+            } else {
+                System.out.println(reply);
             }
 
         } catch (IOException e) {
