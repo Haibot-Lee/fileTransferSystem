@@ -1,7 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -108,7 +105,7 @@ public class server {
                     create(options[1]);
                     break;
                 case "upload":
-                    upload();
+                    upload(in);
                     break;
                 case "download":
                     download();
@@ -158,8 +155,28 @@ public class server {
         }
     }
 
-    private void upload() {
+    private void upload(DataInputStream in) throws IOException {
+        int len = in.readInt();
+        byte[] buffer = new byte[len];
+        in.read(buffer, 0, len);
+        String[] fileInfo = (new String(buffer)).split(" ");
+        File file = new File(fileInfo[0]);
+        FileOutputStream out = new FileOutputStream(file);
+        int size = Integer.parseInt(fileInfo[1]);
 
+        int transCnt = size / 1024 + 1;
+        for (int i = 0; i < transCnt; i++) {
+            int len2 = 1024;
+            if (size < 1024) {
+                len2 = size;
+            }
+
+            byte[] content = new byte[len2];
+            in.read(content, 0, len2);
+            out.write(content, 0, len2);
+            size -= 1024;
+        }
+        System.out.println("receive one file");
     }
 
     private void download() {
