@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Scanner;
 
 public class server {
     File sharedDir;
@@ -94,15 +96,16 @@ public class server {
             byte[] buffer = new byte[len];
             in.read(buffer, 0, len);
             String option = new String(buffer);
-            System.out.println("Option: " + option);
+            String[] options = option.split(" ");
+            //System.out.println("Option: " + option);
 
             //TODO: realize the option from client
-            switch (option) {
+            switch (options[0]) {
                 case "read":
-                    read();
+                    read("test");
                     break;
                 case "create":
-                    create();
+                    create(options[1]);
                     break;
                 case "upload":
                     upload();
@@ -111,10 +114,7 @@ public class server {
                     download();
                     break;
                 case "deleteFile":
-                    deleteFile();
-                    break;
-                case "deleteDir":
-                    deleteDir();
+                    delete(options[1]);
                     break;
                 case "rename":
                     rename();
@@ -126,18 +126,36 @@ public class server {
                     System.out.println("Invalid option");
                     break;
             }
-
         }
-
     }
 
     //opyion on shared root directory
-    private void read() {
+    private void read(String pathname) {
+        File path = new File(pathname);
+        File[] files = path.listFiles();
+        ArrayList<String> info = new ArrayList<>();
 
+        for(File f : files){
+            if(f.isDirectory()) {
+                info.add(String.format("%s %10s %s\n",new Date(f.lastModified()), "<DIR>",f.getName()));
+            }else {
+                info.add(String.format("%s %9dB %s\n",new Date(f.lastModified()),f.length(),f.getName()));
+            }
+        }
+
+        for(String n : info) {
+            System.out.print(n);
+        }
     }
 
-    private void create() {
-
+    private void create(String name) {
+        File file = new File("test\\" + name);
+        if (file.exists()) {
+            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
+        } else {
+            file.mkdirs();
+            System.out.println("Created.");
+        }
     }
 
     private void upload() {
@@ -148,12 +166,41 @@ public class server {
 
     }
 
-    private void deleteFile() {
-
+    private void delete(String name) {
+        File file = new File("test\\"+name);
+        if(file.exists()) {
+            if(!file.isDirectory()) {
+                file.delete();
+                System.out.println("Delete successfully.");
+            }else {
+                File[] files = file.listFiles();
+                if(files.length==0) {
+                    file.delete();
+                    System.out.println("Delete successfully.");
+                }else {
+                    Scanner in = new Scanner(System.in);
+                    System.out.println("The directory "+name+" is not empty! Do you still want to delete it?");
+                    String op = in.nextLine();
+                    if(op.equals("yes")){
+                        deleteAll(file);
+                        System.out.println("Delete successfully.");
+                    }
+                }
+            }
+        }else {
+            System.out.println("The file does not exist.");
+        }
     }
 
-    private void deleteDir() {
-
+    public void deleteAll(File file){
+        if(file.isFile()){
+            file.delete();
+        }else{
+            for(File files : file.listFiles()){
+                deleteAll(files);
+            }
+        }
+        file.delete();
     }
 
     private void rename() {
