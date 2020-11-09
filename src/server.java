@@ -117,7 +117,7 @@ public class server {
                     delete(options[1]);
                     break;
                 case "rename":
-                    rename();
+                    rename(options[1],options[2]);
                     break;
                 case "detail":
                     detail();
@@ -203,8 +203,12 @@ public class server {
         file.delete();
     }
 
-    private void rename() {
-
+    private void rename(String sourcename, String destname) {
+        if(new File("test\\"+sourcename).exists()) {
+            new File("test\\" + sourcename).renameTo(new File("test\\" + destname));
+        }else{
+            System.out.println("yje file doesn't exist");
+        }
     }
 
     private void detail() {
