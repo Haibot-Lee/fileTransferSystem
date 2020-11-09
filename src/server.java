@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Scanner;
 
 public class server {
-    File sharedDir;
+    String sharedDir;
 
     //    ServerSocket udpSocket = new ServerSocket(9998);
     ServerSocket tcpSocket = new ServerSocket(9999);
@@ -16,7 +16,7 @@ public class server {
 //        System.out.println("Listening at UDP port 9998...");
         System.out.println("Listening at TCP port 9999...");
 
-        sharedDir = new File(dirPath);
+        sharedDir = dirPath;
 
         MemberDB memberDB = new MemberDB(listPath);
 
@@ -94,7 +94,7 @@ public class server {
             in.read(buffer, 0, len);
             String option = new String(buffer);
             String[] options = option.split(" ");
-            //System.out.println("Option: " + option);
+            System.out.println("Option: " + option);
 
             //TODO: realize the option from client
             switch (options[0]) {
@@ -146,7 +146,7 @@ public class server {
     }
 
     private void create(String name) {
-        File file = new File("test\\" + name);
+        File file = new File(sharedDir + "\\" + name);
         if (file.exists()) {
             System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
         } else {
@@ -160,7 +160,7 @@ public class server {
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
         String[] fileInfo = (new String(buffer)).split(" ");
-        File file = new File(fileInfo[0]);
+        File file = new File(sharedDir + "\\" + fileInfo[0]);
         FileOutputStream out = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
 
