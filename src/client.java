@@ -67,7 +67,7 @@ public class client {
     //test area
     public static void main(String[] args) {
         try {
-            //158.182.6.131
+//            client c = new client("158.182.8.141");
             client c = new client("127.0.0.1");
             c.login("amy", "123");
 

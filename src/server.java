@@ -114,7 +114,7 @@ public class server {
                     delete(options[1]);
                     break;
                 case "rename":
-                    rename(options[1],options[2]);
+                    rename(options[1], options[2]);
                     break;
                 case "detail":
                     detail();
@@ -126,21 +126,21 @@ public class server {
         }
     }
 
-    //opyion on shared root directory
+    //option on shared root directory
     private void read(String pathname) {
         File path = new File(pathname);
         File[] files = path.listFiles();
         ArrayList<String> info = new ArrayList<>();
 
-        for(File f : files){
-            if(f.isDirectory()) {
-                info.add(String.format("%s %10s %s\n",new Date(f.lastModified()), "<DIR>",f.getName()));
-            }else {
-                info.add(String.format("%s %9dB %s\n",new Date(f.lastModified()),f.length(),f.getName()));
+        for (File f : files) {
+            if (f.isDirectory()) {
+                info.add(String.format("%s %10s %s\n", new Date(f.lastModified()), "<DIR>", f.getName()));
+            } else {
+                info.add(String.format("%s %9dB %s\n", new Date(f.lastModified()), f.length(), f.getName()));
             }
         }
 
-        for(String n : info) {
+        for (String n : info) {
             System.out.print(n);
         }
     }
@@ -166,12 +166,9 @@ public class server {
 
         int transCnt = size / 1024 + 1;
         for (int i = 0; i < transCnt; i++) {
-            int len2 = 1024;
-            if (size < 1024) {
-                len2 = size;
-            }
 
-            byte[] content = new byte[len2];
+            byte[] content = new byte[1024];
+            int len2 = in.readInt();
             in.read(content, 0, len2);
             out.write(content, 0, len2);
             size -= 1024;
@@ -184,36 +181,36 @@ public class server {
     }
 
     private void delete(String name) {
-        File file = new File("test\\"+name);
-        if(file.exists()) {
-            if(!file.isDirectory()) {
+        File file = new File("test\\" + name);
+        if (file.exists()) {
+            if (!file.isDirectory()) {
                 file.delete();
                 System.out.println("Delete successfully.");
-            }else {
+            } else {
                 File[] files = file.listFiles();
-                if(files.length==0) {
+                if (files.length == 0) {
                     file.delete();
                     System.out.println("Delete successfully.");
-                }else {
+                } else {
                     Scanner in = new Scanner(System.in);
-                    System.out.println("The directory "+name+" is not empty! Do you still want to delete it?");
+                    System.out.println("The directory " + name + " is not empty! Do you still want to delete it?");
                     String op = in.nextLine();
-                    if(op.equals("yes")){
+                    if (op.equals("yes")) {
                         deleteAll(file);
                         System.out.println("Delete successfully.");
                     }
                 }
             }
-        }else {
+        } else {
             System.out.println("The file does not exist.");
         }
     }
 
-    public void deleteAll(File file){
-        if(file.isFile()){
+    private void deleteAll(File file) {
+        if (file.isFile()) {
             file.delete();
-        }else{
-            for(File files : file.listFiles()){
+        } else {
+            for (File files : file.listFiles()) {
                 deleteAll(files);
             }
         }
@@ -221,9 +218,9 @@ public class server {
     }
 
     private void rename(String sourcename, String destname) {
-        if(new File("test\\"+sourcename).exists()) {
+        if (new File("test\\" + sourcename).exists()) {
             new File("test\\" + sourcename).renameTo(new File("test\\" + destname));
-        }else{
+        } else {
             System.out.println("yje file doesn't exist");
         }
     }
