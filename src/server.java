@@ -258,9 +258,13 @@ public class server {
 
     private void rename(String sourcename, String destname) {
         if (new File(sharedDir + sourcename).exists()) {
-            new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
+            if(!new File(sharedDir + destname).exists()) {
+                new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
+            }else{
+                System.out.println("The file exists.");
+            }
         } else {
-            System.out.println("yje file doesn't exist");
+            System.out.println("The file doesn't exist");
         }
     }
 
