@@ -1,7 +1,17 @@
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -119,7 +129,7 @@ public class server {
                     rename(options[1], options[2]);
                     break;
                 case "detail":
-                    detail();
+                    detail(options[1]);
                     break;
                 default:
                     System.out.println("Invalid option");
@@ -155,7 +165,7 @@ public class server {
     private void create(String name) {
         File file = new File(sharedDir + name);
         if (file.exists()) {
-            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "File");
+            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
         } else {
             file.mkdirs();
             System.out.println("Dir created");
@@ -256,16 +266,131 @@ public class server {
         file.delete();
     }
 
-    private void rename(String sourceName, String destName) {
-        if (new File(sharedDir + sourceName).exists()) {
-            new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
+    private void rename(String sourcename, String destname) {
+        if (new File(sharedDir + sourcename).exists()) {
+            if (!new File(sharedDir + destname).exists()) {
+                new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
+            } else {
+                System.out.println("The file exists.");
+            }
         } else {
-            System.out.println("yje file doesn't exist");
+            System.out.println("The file doesn't exist");
         }
     }
 
-    private void detail() {
+    //calculate the size of the file and convert it to the version which we can directly read
+    private String convertthesize(double value){
+        String size = "";
+        if (value < 1024) {
+            size = value + "B";
+        } else {
+            value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
+        }
+        if (value < 1024) {
+            size = value + "KB";
+        } else {
+            value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
+        }
+        if (value < 1024) {
+            size = value + "MB";
+        } else {
+            value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
+            size = value + "GB";
+        }
+        return size;
+    }
 
+    private void detail(String filename) {
+        File file = new File(sharedDir + filename);
+        String size = "";
+        long length = 0;
+        String datefromate = "yyyy-MM-dd HH:mm:ss";
+        String createdtime = "";
+        String lastmodifiedtime = "";
+        SimpleDateFormat sdf = new SimpleDateFormat(datefromate);
+        String currenttime = "";
+        String type = "";
+        String NumberOfDir = "";
+        String NumberOfFile = "";
+        String root = "";
+        String name = "";
+        if (file.exists()) {
+            //get name
+            name = file.getName();
+
+            //get the position
+            root = file.getAbsolutePath();
+
+            //get size which we can directly read
+            size = convertthesize((double) file.length());
+
+            //get the created time
+            Path path = Paths.get(filename);
+            BasicFileAttributeView basicview = Files.getFileAttributeView(path, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+            BasicFileAttributes attr;
+            try {
+                attr = basicview.readAttributes();
+                Date createDate = new Date(attr.creationTime().toMillis());
+                createdtime = sdf.format(createDate);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            //get type
+            if (file.isFile()) {
+                //get last modified time
+                Calendar cal = Calendar.getInstance();
+                cal.set(1970, 0, 1, 0, 0, 0);
+                lastmodifiedtime = sdf.format(cal.getTime());
+
+                //get current time
+                Date date = new Date();
+                currenttime = sdf.format(date);
+
+                //get type
+                type = "File";
+            } else {
+                //get type
+                type = "Directory";
+
+                //get the numbers of the files and directory
+                File[] files = file.listFiles();
+                int numberofdir = 0;
+                int numberoffile = 0;
+
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        numberofdir++;
+                    } else {
+                        numberoffile++;
+                    }
+                }
+                NumberOfDir = String.valueOf(numberofdir);
+                NumberOfFile = String.valueOf(numberoffile);
+            }
+
+            //send the data to the client
+            if (file.isFile()) {
+                System.out.println("type: " + type);
+                System.out.println("name: " + name);
+                System.out.println("position: " + root);
+                System.out.println("size: " + size);
+                System.out.println("size: " + length);
+                System.out.println("create time: " + createdtime);
+                System.out.println("last modified time: " + lastmodifiedtime);
+                System.out.println("interview time: " + currenttime);
+            } else if (file.isDirectory()) {
+                System.out.println("type: " + type);
+                System.out.println("name: " + name);
+                System.out.println("position: " + root);
+                System.out.println("size: " + size);
+                System.out.println("size: " + length);
+                System.out.println("content: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory");
+                System.out.println("create time: " + createdtime);
+            }
+        } else {
+            System.out.println("The file doesn't exist");
+        }
     }
 
     //start server
