@@ -1,0 +1,72 @@
+Index: src/server.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import java.io.*;\r\nimport java.net.ServerSocket;\r\nimport java.net.Socket;\r\nimport java.util.ArrayList;\r\nimport java.util.Date;\r\nimport java.util.Scanner;\r\n\r\npublic class server {\r\n    String sharedDir;\r\n\r\n    //    ServerSocket udpSocket = new ServerSocket(9998);\r\n    ServerSocket tcpSocket = new ServerSocket(9999);\r\n    ArrayList<Socket> list = new ArrayList<Socket>();\r\n\r\n    public server(String dirPath, String listPath) throws IOException {\r\n//        System.out.println(\"Listening at UDP port 9998...\");\r\n        System.out.println(\"Listening at TCP port 9999...\");\r\n\r\n        sharedDir = dirPath + \"\\\\\";\r\n\r\n        MemberDB memberDB = new MemberDB(listPath);\r\n\r\n        while (true) {\r\n            Socket memberSocket = tcpSocket.accept();\r\n\r\n            synchronized (list) {\r\n                list.add(memberSocket);\r\n            }\r\n\r\n            Thread t = new Thread(() -> {\r\n                try {\r\n                    if (loginCheck(memberSocket, memberDB))\r\n                        receiveCmd(memberSocket);\r\n                } catch (IOException e) {\r\n                    System.err.println(\"connection dropped.\");\r\n                }\r\n                synchronized (list) {\r\n                    list.remove(memberSocket);\r\n                }\r\n            });\r\n            t.start();\r\n        }\r\n    }\r\n\r\n    private boolean loginCheck(Socket memberSocket, MemberDB memberDB) throws IOException {\r\n        DataInputStream in = new DataInputStream(memberSocket.getInputStream());\r\n        int len = in.readInt();\r\n        byte[] buffer = new byte[len];\r\n        in.read(buffer, 0, len);\r\n        String loginMsg = new String(buffer);\r\n        String[] loginInfo = loginMsg.split(\" \");\r\n\r\n        boolean ifLogin = false;\r\n        String reply = \"member does not exist\";\r\n\r\n        for (int i = 0; i < memberDB.getSize(); i++) {\r\n            if (loginInfo[0].equals(memberDB.getMember(i).getName())) {\r\n                if (loginInfo[1].equals(memberDB.getMember(i).getPassword())) {\r\n                    ifLogin = true;\r\n                    reply = \"accept\";\r\n                    System.out.printf(\"Total %d clients are connected.\\n\", list.size());\r\n                    System.out.printf(\"Established a connection to host %s:%d\\n\\n\", memberSocket.getInetAddress(), memberSocket.getPort());\r\n                    break;\r\n                } else {\r\n                    reply = \"wrong password\";\r\n                    break;\r\n                }\r\n            }\r\n        }\r\n\r\n        reply(reply, memberSocket);\r\n        return ifLogin;\r\n\r\n    }\r\n\r\n    private void reply(String reply, Socket destSocket) {\r\n        synchronized (list) {\r\n            try {\r\n                byte[] data = reply.getBytes();\r\n                int len = data.length;\r\n                DataOutputStream out = new DataOutputStream(destSocket.getOutputStream());\r\n                out.writeInt(len);\r\n                out.write(data, 0, len);\r\n            } catch (IOException e) {\r\n                // the connection is dropped but the socket is not yet removed.\r\n            }\r\n\r\n        }\r\n    }\r\n\r\n    private void receiveCmd(Socket memberSocket) throws IOException {\r\n        DataInputStream in = new DataInputStream(memberSocket.getInputStream());\r\n        while (true) {\r\n            int len = in.readInt();\r\n            byte[] buffer = new byte[len];\r\n            in.read(buffer, 0, len);\r\n            String option = new String(buffer);\r\n            String[] options = option.split(\" \");\r\n            System.out.println(\"Option: \" + option);\r\n\r\n            //TODO: realize the option from client\r\n            switch (options[0]) {\r\n                case \"read\":\r\n                    read(options[1]);\r\n                    break;\r\n                case \"create\":\r\n                    create(options[1]);\r\n                    break;\r\n                case \"upload\":\r\n                    upload(memberSocket);\r\n                    break;\r\n                case \"download\":\r\n                    download(\"sub\", memberSocket);\r\n                    break;\r\n                case \"deleteFile\":\r\n                    delete(options[1]);\r\n                    break;\r\n                case \"rename\":\r\n                    rename(options[1], options[2]);\r\n                    break;\r\n                case \"detail\":\r\n                    detail();\r\n                    break;\r\n                default:\r\n                    System.out.println(\"Invalid option\");\r\n                    break;\r\n            }\r\n        }\r\n    }\r\n\r\n    //option on shared root directory\r\n    private void read(String pathname) {\r\n        File path;\r\n        if (pathname.equals(\".\")) {\r\n            path = new File(sharedDir);\r\n        } else {\r\n            path = new File(sharedDir + pathname);\r\n        }\r\n        File[] files = path.listFiles();\r\n        ArrayList<String> info = new ArrayList<>();\r\n\r\n        for (File f : files) {\r\n            if (f.isDirectory()) {\r\n                info.add(String.format(\"%s %10s %s\\n\", new Date(f.lastModified()), \"<DIR>\", f.getName()));\r\n            } else {\r\n                info.add(String.format(\"%s %9dB %s\\n\", new Date(f.lastModified()), f.length(), f.getName()));\r\n            }\r\n        }\r\n\r\n        for (String n : info) {\r\n            System.out.print(n);\r\n        }\r\n    }\r\n\r\n    private void create(String name) {\r\n        File file = new File(sharedDir + name);\r\n        if (file.exists()) {\r\n            System.out.printf(\"%s exists!\\n\", file.isDirectory() ? \"Directory\" : \"Filr\");\r\n        } else {\r\n            file.mkdirs();\r\n            System.out.println(\"Dir created\");\r\n        }\r\n    }\r\n\r\n    private void upload(Socket memberSocket) throws IOException {\r\n        DataInputStream in = new DataInputStream(memberSocket.getInputStream());\r\n        int len = in.readInt();\r\n        byte[] buffer = new byte[len];\r\n        in.read(buffer, 0, len);\r\n        String[] fileInfo = (new String(buffer)).split(\" \");\r\n        File file = new File(sharedDir + fileInfo[0]);\r\n\r\n        FileOutputStream outFile = new FileOutputStream(file);\r\n        int size = Integer.parseInt(fileInfo[1]);\r\n        int transCnt = size / 1024 + 1;\r\n        for (int i = 0; i < transCnt; i++) {\r\n\r\n            byte[] content = new byte[1024];\r\n            int len2 = in.readInt();\r\n            in.read(content, 0, len2);\r\n            outFile.write(content, 0, len2);\r\n            size -= 1024;\r\n        }\r\n        outFile.close();\r\n        System.out.println(\"receive one file\");\r\n    }\r\n\r\n    private void download(String name, Socket memberSocket) throws IOException {\r\n        DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());\r\n\r\n        File file = new File(sharedDir + name);\r\n        if (!file.exists()) {\r\n            String reply = \"File does not exist\";\r\n            out.writeInt(reply.length());\r\n            out.write(reply.getBytes(), 0, reply.length());\r\n            return;\r\n        }\r\n        if (file.isDirectory()) {\r\n            String reply = \"Can not download directory\";\r\n            out.writeInt(reply.length());\r\n            out.write(reply.getBytes(), 0, reply.length());\r\n            return;\r\n        }\r\n\r\n        String fileName = file.getName();\r\n        long fileSize = file.length();\r\n        String fileInfo = String.format(\"%s %d\", fileName, fileSize);\r\n        out.writeInt(fileInfo.length());\r\n        out.write(fileInfo.getBytes(), 0, fileInfo.length());\r\n\r\n        FileInputStream inFile = new FileInputStream(file);\r\n        while (fileSize > 0) {\r\n            byte[] buffer = new byte[1024];\r\n            int len = inFile.read(buffer);\r\n            fileSize -= len;\r\n            out.writeInt(len);\r\n            out.write(buffer, 0, len);\r\n        }\r\n        inFile.close();\r\n    }\r\n\r\n    private void delete(String name) {\r\n        File file = new File(sharedDir + name);\r\n        if (file.exists()) {\r\n            if (!file.isDirectory()) {\r\n                file.delete();\r\n                System.out.println(\"Delete successfully.\");\r\n            } else {\r\n                File[] files = file.listFiles();\r\n                if (files.length == 0) {\r\n                    file.delete();\r\n                    System.out.println(\"Delete successfully.\");\r\n                } else {\r\n                    Scanner in = new Scanner(System.in);\r\n                    System.out.println(\"The directory \" + name + \" is not empty! Do you still want to delete it?\");\r\n                    String op = in.nextLine();\r\n                    if (op.equals(\"yes\")) {\r\n                        deleteAll(file);\r\n                        System.out.println(\"Delete successfully.\");\r\n                    }\r\n                }\r\n            }\r\n        } else {\r\n            System.out.println(\"The file does not exist.\");\r\n        }\r\n    }\r\n\r\n    private void deleteAll(File file) {\r\n        if (file.isFile()) {\r\n            file.delete();\r\n        } else {\r\n            for (File files : file.listFiles()) {\r\n                deleteAll(files);\r\n            }\r\n        }\r\n        file.delete();\r\n    }\r\n\r\n    private void rename(String sourcename, String destname) {\r\n        if (new File(sharedDir + sourcename).exists()) {\r\n            new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));\r\n        } else {\r\n            System.out.println(\"yje file doesn't exist\");\r\n        }\r\n    }\r\n\r\n    private void detail() {\r\n\r\n    }\r\n\r\n    //start server\r\n    public static void main(String[] args) throws IOException {\r\n        new server(args[0], args[1]);\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/server.java	(revision 94c7d055ecde034a8ed934874cc9504f7e2d07b5)
++++ src/server.java	(date 1604988130099)
+@@ -1,4 +1,6 @@
+ import java.io.*;
++import java.net.DatagramPacket;
++import java.net.DatagramSocket;
+ import java.net.ServerSocket;
+ import java.net.Socket;
+ import java.util.ArrayList;
+@@ -8,18 +10,30 @@
+ public class server {
+     String sharedDir;
+ 
+-    //    ServerSocket udpSocket = new ServerSocket(9998);
++    DatagramSocket udpSocket = new DatagramSocket(9998);
+     ServerSocket tcpSocket = new ServerSocket(9999);
+     ArrayList<Socket> list = new ArrayList<Socket>();
+ 
+     public server(String dirPath, String listPath) throws IOException {
+-//        System.out.println("Listening at UDP port 9998...");
++        System.out.println("Listening at UDP port 9998...");
+         System.out.println("Listening at TCP port 9999...");
+ 
+         sharedDir = dirPath + "\\";
+-
+         MemberDB memberDB = new MemberDB(listPath);
+ 
++        //UDP socket
++//        DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
++//        udpSocket.receive(packet);
++//        byte[] data = packet.getData();
++//        String str = new String(data, 0, packet.getLength());
++//
++//        if (str.equals("Is anyone here?")) {
++//            String rep = "I am here!";
++//            udpSocket.send(new DatagramPacket(rep.getBytes(), rep.length(), packet.getAddress(), packet.getPort()));
++//            System.out.println("Reply successfully");
++//        }
++
++        //TCP socket
+         while (true) {
+             Socket memberSocket = tcpSocket.accept();
+ 
+@@ -155,7 +169,7 @@
+     private void create(String name) {
+         File file = new File(sharedDir + name);
+         if (file.exists()) {
+-            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
++            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "File");
+         } else {
+             file.mkdirs();
+             System.out.println("Dir created");
+@@ -256,9 +270,9 @@
+         file.delete();
+     }
+ 
+-    private void rename(String sourcename, String destname) {
+-        if (new File(sharedDir + sourcename).exists()) {
+-            new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
++    private void rename(String sourceName, String destName) {
++        if (new File(sharedDir + sourceName).exists()) {
++            new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
+         } else {
+             System.out.println("yje file doesn't exist");
+         }

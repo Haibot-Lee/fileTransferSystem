@@ -155,7 +155,7 @@ public class server {
     private void create(String name) {
         File file = new File(sharedDir + name);
         if (file.exists()) {
-            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
+            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "File");
         } else {
             file.mkdirs();
             System.out.println("Dir created");
@@ -256,9 +256,9 @@ public class server {
         file.delete();
     }
 
-    private void rename(String sourcename, String destname) {
-        if (new File(sharedDir + sourcename).exists()) {
-            new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
+    private void rename(String sourceName, String destName) {
+        if (new File(sharedDir + sourceName).exists()) {
+            new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
         } else {
             System.out.println("yje file doesn't exist");
         }
