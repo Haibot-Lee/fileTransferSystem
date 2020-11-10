@@ -266,10 +266,10 @@ public class server {
         file.delete();
     }
 
-    private void rename(String sourcename, String destname) {
-        if (new File(sharedDir + sourcename).exists()) {
-            if (!new File(sharedDir + destname).exists()) {
-                new File(sharedDir + sourcename).renameTo(new File(sharedDir + destname));
+    private void rename(String sourceName, String destName) {
+        if (new File(sharedDir + sourceName).exists()) {
+            if (!new File(sharedDir + destName).exists()) {
+                new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
             } else {
                 System.out.println("The file exists.");
             }
