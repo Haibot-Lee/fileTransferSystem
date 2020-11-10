@@ -1,5 +1,7 @@
 import java.io.*;
 import java.math.BigDecimal;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -8,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,18 +19,42 @@ import java.util.Scanner;
 public class server {
     String sharedDir;
 
-    //    ServerSocket udpSocket = new ServerSocket(9998);
+    DatagramSocket udpSocket = new DatagramSocket(9998);
     ServerSocket tcpSocket = new ServerSocket(9999);
     ArrayList<Socket> list = new ArrayList<Socket>();
 
     public server(String dirPath, String listPath) throws IOException {
-//        System.out.println("Listening at UDP port 9998...");
-        System.out.println("Listening at TCP port 9999...");
-
         sharedDir = dirPath + "\\";
-
         MemberDB memberDB = new MemberDB(listPath);
 
+        System.out.println("Listening at UDP port 9998...");
+        System.out.println("Listening at TCP port 9999...");
+
+        //UDP socket
+        Thread udp = new Thread(() -> {
+            try {
+                int i = 0;
+                while (true) {
+                    DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
+                    udpSocket.receive(packet);
+                    byte[] data = packet.getData();
+                    String str = new String(data, 0, packet.getLength());
+                    System.out.println(packet.getAddress());
+                    System.out.println(packet.getPort());
+
+                    if (str.equals("Finding server...")) {
+                        udpSocket.send(new DatagramPacket("Here is a server".getBytes(), "Here is a server".length(), packet.getAddress(), packet.getPort()));
+                        System.out.println("One request" + i);
+                        i++;
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("UDP connection dropped.");
+            }
+        });
+        udp.start();
+
+        //TCP socket
         while (true) {
             Socket memberSocket = tcpSocket.accept();
 
@@ -37,7 +62,7 @@ public class server {
                 list.add(memberSocket);
             }
 
-            Thread t = new Thread(() -> {
+            Thread tcp = new Thread(() -> {
                 try {
                     if (loginCheck(memberSocket, memberDB))
                         receiveCmd(memberSocket);
@@ -48,7 +73,7 @@ public class server {
                     list.remove(memberSocket);
                 }
             });
-            t.start();
+            tcp.start();
         }
     }
 
@@ -108,28 +133,27 @@ public class server {
             String[] options = option.split(" ");
             System.out.println("Option: " + option);
 
-            //TODO: realize the option from client
             switch (options[0]) {
                 case "read":
-                    read(options[1]);
+                    read(options[1], memberSocket);
                     break;
                 case "create":
-                    create(options[1]);
+                    create(options[1], memberSocket);
                     break;
                 case "upload":
-                    upload(memberSocket);
+                    upload(options[1], memberSocket);
                     break;
                 case "download":
-                    download("sub", memberSocket);
+                    download(options[1], memberSocket);
                     break;
-                case "deleteFile":
-                    delete(options[1]);
+                case "delete":
+                    delete(options[1], memberSocket);
                     break;
                 case "rename":
-                    rename(options[1], options[2]);
+                    rename(options[1], options[2], memberSocket);
                     break;
                 case "detail":
-                    detail(options[1]);
+                    detail(options[1], memberSocket);
                     break;
                 default:
                     System.out.println("Invalid option");
@@ -139,13 +163,14 @@ public class server {
     }
 
     //option on shared root directory
-    private void read(String pathname) {
+    private void read(String fileName, Socket memberSocket) {
         File path;
-        if (pathname.equals(".")) {
+        if (fileName.equals(".")) {
             path = new File(sharedDir);
         } else {
-            path = new File(sharedDir + pathname);
+            path = new File(sharedDir + fileName);
         }
+
         File[] files = path.listFiles();
         ArrayList<String> info = new ArrayList<>();
 
@@ -162,23 +187,28 @@ public class server {
         }
     }
 
-    private void create(String name) {
-        File file = new File(sharedDir + name);
+    private void create(String path, Socket memberSocket) {
+        File file = new File(sharedDir + path);
+        String reply = "";
+
         if (file.exists()) {
-            System.out.printf("%s exists!\n", file.isDirectory() ? "Directory" : "Filr");
+            reply = String.format("%s exists!", file.isDirectory() ? "Directory" : "File");
         } else {
             file.mkdirs();
-            System.out.println("Dir created");
+            reply = "Dir(" + path + ") created";
         }
+
+        System.out.println(reply);
+        reply(reply, memberSocket);
     }
 
-    private void upload(Socket memberSocket) throws IOException {
+    private void upload(String path, Socket memberSocket) throws IOException {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         int len = in.readInt();
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
         String[] fileInfo = (new String(buffer)).split(" ");
-        File file = new File(sharedDir + fileInfo[0]);
+        File file = new File(sharedDir + path + "\\" + fileInfo[0]);
 
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
@@ -195,10 +225,10 @@ public class server {
         System.out.println("receive one file");
     }
 
-    private void download(String name, Socket memberSocket) throws IOException {
+    private void download(String path, Socket memberSocket) throws IOException {
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
 
-        File file = new File(sharedDir + name);
+        File file = new File(sharedDir + path);
         if (!file.exists()) {
             String reply = "File does not exist";
             out.writeInt(reply.length());
@@ -229,30 +259,35 @@ public class server {
         inFile.close();
     }
 
-    private void delete(String name) {
-        File file = new File(sharedDir + name);
+    private void delete(String fileName, Socket memberSocket) {
+        File file = new File(sharedDir + fileName);
+        String reply = "";
+
         if (file.exists()) {
             if (!file.isDirectory()) {
                 file.delete();
-                System.out.println("Delete successfully.");
+                reply = "Delete successfully";
             } else {
                 File[] files = file.listFiles();
                 if (files.length == 0) {
                     file.delete();
-                    System.out.println("Delete successfully.");
+                    reply = "Delete successfully";
                 } else {
                     Scanner in = new Scanner(System.in);
-                    System.out.println("The directory " + name + " is not empty! Do you still want to delete it?");
+                    System.out.println("The directory " + fileName + " is not empty! Do you still want to delete it?");
                     String op = in.nextLine();
                     if (op.equals("yes")) {
                         deleteAll(file);
-                        System.out.println("Delete successfully.");
+                        reply = "Delete successfully";
                     }
                 }
             }
         } else {
-            System.out.println("The file does not exist.");
+            reply = "The file does not exist";
         }
+
+        System.out.println(reply);
+        reply(reply, memberSocket);
     }
 
     private void deleteAll(File file) {
@@ -266,20 +301,25 @@ public class server {
         file.delete();
     }
 
-    private void rename(String sourceName, String destName) {
+    private void rename(String sourceName, String destName, Socket memberSocket) {
+        String reply = "";
+
         if (new File(sharedDir + sourceName).exists()) {
             if (!new File(sharedDir + destName).exists()) {
                 new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
             } else {
-                System.out.println("The file exists.");
+                reply = "The file exists";
             }
         } else {
-            System.out.println("The file doesn't exist");
+            reply = "The file doesn't exist";
         }
+
+        System.out.println(reply);
+        reply(reply, memberSocket);
     }
 
     //calculate the size of the file and convert it to the version which we can directly read
-    private String convertthesize(double value){
+    private String convertthesize(double value) {
         String size = "";
         if (value < 1024) {
             size = value + "B";
@@ -300,8 +340,8 @@ public class server {
         return size;
     }
 
-    private void detail(String filename) {
-        File file = new File(sharedDir + filename);
+    private void detail(String fileName, Socket memberSocket) {
+        File file = new File(sharedDir + fileName);
         String size = "";
         long length = 0;
         String datefromate = "yyyy-MM-dd HH:mm:ss";
@@ -325,7 +365,7 @@ public class server {
             size = convertthesize((double) file.length());
 
             //get the created time
-            Path path = Paths.get(filename);
+            Path path = Paths.get(fileName);
             BasicFileAttributeView basicview = Files.getFileAttributeView(path, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
             BasicFileAttributes attr;
             try {
