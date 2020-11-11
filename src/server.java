@@ -38,13 +38,16 @@ public class server {
                     DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
                     udpSocket.receive(packet);
                     byte[] data = packet.getData();
-                    String str = new String(data, 0, packet.getLength());
+                    String msg = new String(data, 0, packet.getLength());
 
-                    if (str.equals("Finding server...")) {
+                    if (msg.equals("Finding server...")) {
+                        System.out.println("Request" + i);
                         System.out.println(packet.getAddress());
                         System.out.println(packet.getPort());
-                        udpSocket.send(new DatagramPacket("Here is a server".getBytes(), "Here is a server".length(), packet.getAddress(), packet.getPort()));
-                        System.out.println("One request" + i);
+
+                        String reply = "availableServer " + System.getenv("COMPUTERNAME");
+                        System.out.println(reply);
+                        udpSocket.send(new DatagramPacket(reply.getBytes(), reply.length(), packet.getAddress(), packet.getPort()));
                         i++;
                     }
                 }

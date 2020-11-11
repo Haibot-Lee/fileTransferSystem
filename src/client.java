@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class client {
-    ArrayList<String> servers = new ArrayList<String>();
+    ArrayList<String> serversIP = new ArrayList<String>();
+    ArrayList<String> serversName = new ArrayList<String>();
     Socket tcpSocket;
 
     public client() throws IOException {
@@ -15,7 +16,7 @@ public class client {
     }
 
     public void broadcasts(int times) throws IOException {
-        DatagramSocket udpSocket = new DatagramSocket(3333);
+        DatagramSocket udpSocket = new DatagramSocket(12345);
         byte[] msg = "Finding server...".getBytes();
         InetAddress dest = InetAddress.getByName("255.255.255.255");
         DatagramPacket packet = new DatagramPacket(msg, msg.length, dest, 9998);
@@ -26,7 +27,7 @@ public class client {
     }
 
     public void receiveIP() throws IOException {
-        DatagramSocket udpSocket = new DatagramSocket(3333);
+        DatagramSocket udpSocket = new DatagramSocket(12345);
 
         Thread udp = new Thread(() -> {
             while (true) {
@@ -34,14 +35,19 @@ public class client {
                     DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
                     udpSocket.receive(packet);
                     byte[] data = packet.getData();
-                    String str = new String(data, 0, packet.getLength());
+                    String msg = new String(data, 0, packet.getLength());
+                    String[] msgs = msg.split(" ");
 
-                    if (str.equals("Here is a server")) {
+                    if (msgs[0].equals("availableServer")) {
                         String ip = packet.getAddress().toString();
                         ip = ip.substring(ip.lastIndexOf("/") + 1);
-                        System.out.println(ip);
-                        if (!servers.contains(ip)) {
-                            servers.add(ip);
+                        synchronized (serversIP) {
+                            if (!serversIP.contains(ip)) {
+                                serversIP.add(ip);
+                                synchronized (serversName) {
+                                    serversName.add(msgs[1]);
+                                }
+                            }
                         }
                     }
                 } catch (IOException e) {
@@ -140,8 +146,22 @@ public class client {
             client c = new client();
             c.broadcasts(5);
             c.receiveIP();
-            c.login(c.servers.get(0), "amy", "123");
-
+            while (true) {
+                synchronized (c.serversIP) {
+                    for (int i = 0; i < c.serversIP.size(); i++) {
+                        System.out.println(c.serversIP.get(i));
+                        synchronized (c.serversName) {
+                            System.out.println(c.serversName.get(i));
+                        }
+                    }
+                    if (c.serversIP.size() > 0) {
+                        break;
+                    }
+                }
+            }
+            synchronized (c.serversIP) {
+                c.login(c.serversIP.get(0), "amy", "123");
+            }
             String reply = c.getReply();
             if (reply.equals("accept")) {
                 Scanner scanner = new Scanner(System.in);
