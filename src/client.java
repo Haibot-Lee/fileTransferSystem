@@ -1,18 +1,57 @@
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class client {
-    String serverIp;
-    Socket socket;
+    ArrayList<String> servers = new ArrayList<String>();
+    Socket tcpSocket;
 
-    public client(String serverIp) throws IOException {
-        this.serverIp = serverIp;
-        socket = new Socket(serverIp, 9999);
+    public client() throws IOException {
+
     }
 
-    public void login(String member, String password) throws IOException {
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+    public void broadcasts(int times) throws IOException {
+        DatagramSocket udpSocket = new DatagramSocket(3333);
+        byte[] msg = "Finding server...".getBytes();
+        InetAddress dest = InetAddress.getByName("255.255.255.255");
+        DatagramPacket packet = new DatagramPacket(msg, msg.length, dest, 9998);
+        for (int i = 0; i < times; i++) {
+            udpSocket.send(packet);
+        }
+        udpSocket.close();
+    }
+
+    public void receiveIP() throws IOException {
+        DatagramSocket udpSocket = new DatagramSocket(3333);
+
+        Thread udp = new Thread(() -> {
+            while (true) {
+                try {
+                    DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
+                    udpSocket.receive(packet);
+
+                    String ip = packet.getAddress().toString();
+                    ip = ip.substring(ip.lastIndexOf("/") + 1);
+                    System.out.println(ip);
+                    if (!servers.contains(ip)) {
+                        servers.add(ip);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Failed to receive from server!");
+                }
+            }
+        });
+        udp.start();
+
+    }
+
+    public void login(String serverIp, String member, String password) throws IOException {
+        tcpSocket = new Socket(serverIp, 9999);
+        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
 
         String loginInfo = member + " " + password;
         out.writeInt(loginInfo.length());
@@ -20,14 +59,14 @@ public class client {
     }
 
     public void sendCmd(String option) throws IOException {
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         out.writeInt(option.length());
         out.write(option.getBytes(), 0, option.length());
     }
 
     public String getReply() throws IOException {
         String reply = "";
-        DataInputStream in = new DataInputStream(socket.getInputStream());
+        DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         try {
             int len = in.readInt();
             byte[] buffer = new byte[len];
@@ -43,7 +82,7 @@ public class client {
     }
 
     public void upload(String filePath) throws IOException {
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         File file = new File(filePath);
         String fileName = file.getName();
         long fileSize = file.length();
@@ -63,7 +102,7 @@ public class client {
     }
 
     public void download() throws IOException {
-        DataInputStream in = new DataInputStream(socket.getInputStream());
+        DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         int len = in.readInt();
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
@@ -93,9 +132,11 @@ public class client {
     //test area
     public static void main(String[] args) {
         try {
-//            client c = new client("158.182.8.141");
-            client c = new client("127.0.0.1");
-            c.login("amy", "123");
+
+            client c = new client();
+            c.broadcasts(5);
+            c.receiveIP();
+            c.login(c.servers.get(0), "amy", "123");
 
             String reply = c.getReply();
             if (reply.equals("accept")) {
