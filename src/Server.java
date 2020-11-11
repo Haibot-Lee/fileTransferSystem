@@ -16,14 +16,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Scanner;
 
-public class server {
+public class Server {
     String sharedDir;
 
     DatagramSocket udpSocket = new DatagramSocket(9998);
     ServerSocket tcpSocket = new ServerSocket(9999);
     ArrayList<Socket> list = new ArrayList<Socket>();
 
-    public server(String dirPath, String listPath) throws IOException {
+    public Server(String dirPath, String listPath) throws IOException {
         sharedDir = dirPath + "\\";
         MemberDB memberDB = new MemberDB(listPath);
 
@@ -438,7 +438,7 @@ public class server {
 
     //start server
     public static void main(String[] args) throws IOException {
-        new server(args[0], args[1]);
-//        new server("", "members.txt");
+        new Server(args[0], args[1]);
+//        new Server("", "members.txt");
     }
 }

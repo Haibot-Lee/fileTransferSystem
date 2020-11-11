@@ -6,12 +6,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class client {
+public class Client {
     ArrayList<String> serversIP = new ArrayList<String>();
     ArrayList<String> serversName = new ArrayList<String>();
     Socket tcpSocket;
 
-    public client() throws IOException {
+    public Client() throws IOException {
 
     }
 
@@ -143,7 +143,7 @@ public class client {
     public static void main(String[] args) {
         try {
 
-            client c = new client();
+            Client c = new Client();
             c.broadcasts(5);
             c.receiveIP();
             while (true) {
