@@ -39,10 +39,10 @@ public class server {
                     udpSocket.receive(packet);
                     byte[] data = packet.getData();
                     String str = new String(data, 0, packet.getLength());
-                    System.out.println(packet.getAddress());
-                    System.out.println(packet.getPort());
 
                     if (str.equals("Finding server...")) {
+                        System.out.println(packet.getAddress());
+                        System.out.println(packet.getPort());
                         udpSocket.send(new DatagramPacket("Here is a server".getBytes(), "Here is a server".length(), packet.getAddress(), packet.getPort()));
                         System.out.println("One request" + i);
                         i++;
@@ -436,5 +436,6 @@ public class server {
     //start server
     public static void main(String[] args) throws IOException {
         new server(args[0], args[1]);
+//        new server("", "members.txt");
     }
 }

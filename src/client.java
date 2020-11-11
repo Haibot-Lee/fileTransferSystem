@@ -33,12 +33,16 @@ public class client {
                 try {
                     DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
                     udpSocket.receive(packet);
+                    byte[] data = packet.getData();
+                    String str = new String(data, 0, packet.getLength());
 
-                    String ip = packet.getAddress().toString();
-                    ip = ip.substring(ip.lastIndexOf("/") + 1);
-                    System.out.println(ip);
-                    if (!servers.contains(ip)) {
-                        servers.add(ip);
+                    if (str.equals("Here is a server")) {
+                        String ip = packet.getAddress().toString();
+                        ip = ip.substring(ip.lastIndexOf("/") + 1);
+                        System.out.println(ip);
+                        if (!servers.contains(ip)) {
+                            servers.add(ip);
+                        }
                     }
                 } catch (IOException e) {
                     System.err.println("Failed to receive from server!");
