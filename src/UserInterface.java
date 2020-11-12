@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,9 +37,11 @@ public class UserInterface {
         container.add(loginInfo);
 
         //Server list
-        JLabel serversLabel = new JLabel("Available server:");
+        JLabel serversLabel = new JLabel("Available servers:");
         GridBagConstraints s0 = new GridBagConstraints();
         s0.gridy = 0;
+        s0.gridwidth = 2;
+        s0.weightx = 50;
         s0.anchor = GridBagConstraints.WEST;
         findServer.add(serversLabel, s0);
 
@@ -45,17 +49,27 @@ public class UserInterface {
         JScrollPane jsp = new JScrollPane(serverList);
         GridBagConstraints s1 = new GridBagConstraints();
         s1.gridy = 1;
-        s1.weightx = 100;
+        s1.gridwidth = 2;
         s1.weighty = 80;
         s1.fill = GridBagConstraints.BOTH;
         findServer.add(jsp, s1);
 
-        JButton broadcast = new JButton("Broadcast");
+        JLabel find = new JLabel();
         GridBagConstraints s2 = new GridBagConstraints();
         s2.gridy = 2;
         s2.weighty = 5;
-        s2.anchor = GridBagConstraints.EAST;
-        findServer.add(broadcast, s2);
+        s2.anchor = GridBagConstraints.WEST;
+        findServer.add(find, s2);
+        find.setVisible(false);
+
+        JButton broadcast = new JButton("Broadcast");
+        GridBagConstraints s3 = new GridBagConstraints();
+        s3.gridx = 1;
+        s3.gridy = 2;
+        s3.weighty = 5;
+        s3.anchor = GridBagConstraints.EAST;
+        findServer.add(broadcast, s3);
+
 
         //Input loginPage info.
         JLabel ipLabel = new JLabel("Input/Choose one Server:");
@@ -123,8 +137,9 @@ public class UserInterface {
                 for (int i = 0; i < list.length; i++) {
                     list[i] = user.serversName.get(i) + " (IP address: " + user.serversIP.get(i) + ")";
                 }
-
                 serverList.setListData(list);
+                find.setText(list.length + " server(s) are found!");
+                find.setVisible(true);
             }
         });
 
@@ -164,6 +179,18 @@ public class UserInterface {
         homePage.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Container container = homePage.getContentPane();
         container.setLayout(new GridBagLayout());
+
+        JTree tree = new JTree();
+        GridBagConstraints p1 = new GridBagConstraints();
+        p1.weightx = 80;
+        p1.fill = GridBagConstraints.BOTH;
+        container.add(tree, p1);
+
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Hello");
+        node.add(new DefaultMutableTreeNode("World"));
+        DefaultTreeModel tmodel = new DefaultTreeModel(node);
+        tree.setModel(tmodel);
+
 
         homePage.setVisible(true);
     }
