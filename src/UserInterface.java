@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     Client user;
@@ -111,11 +112,18 @@ public class UserInterface {
         broadcast.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String[] list = new String[20];
-                list[0] = "127.0.0.1";
-                for (int i = 1; i < list.length; i++) {
-                    list[i] = "item" + i;
+                try {
+                    user.broadcasts(5);
+                    user.receiveIP();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
                 }
+
+                String[] list = new String[user.serversIP.size()];
+                for (int i = 0; i < list.length; i++) {
+                    list[i] = user.serversName.get(i) + " (IP address: " + user.serversIP.get(i) + ")";
+                }
+
                 serverList.setListData(list);
             }
         });
@@ -123,7 +131,9 @@ public class UserInterface {
         serverList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                serverIP.setText(serverList.getSelectedValue());
+                String ip = serverList.getSelectedValue();
+                ip = ip.substring(ip.lastIndexOf("/") + 1, ip.length() - 1);
+                serverIP.setText(ip);
             }
         });
 
