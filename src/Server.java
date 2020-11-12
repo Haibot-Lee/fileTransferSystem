@@ -24,7 +24,7 @@ public class Server {
     ArrayList<Socket> list = new ArrayList<Socket>();
 
     public Server(String dirPath, String listPath) throws IOException {
-        sharedDir = dirPath + "\\";
+        sharedDir = dirPath;
         MemberDB memberDB = new MemberDB(listPath);
 
         System.out.println("Listening at UDP port 9998...");
@@ -138,7 +138,11 @@ public class Server {
 
             switch (options[0]) {
                 case "read":
-                    read(options[1], memberSocket);
+                    if (options.length == 1) {
+                        read("", memberSocket);
+                    } else {
+                        read(options[1], memberSocket);
+                    }
                     break;
                 case "create":
                     create(options[1], memberSocket);
@@ -168,7 +172,7 @@ public class Server {
     //option on shared root directory
     private void read(String fileName, Socket memberSocket) {
         File path;
-        if (fileName.equals(".")) {
+        if (fileName.equals("")) {
             path = new File(sharedDir);
         } else {
             path = new File(sharedDir + fileName);
@@ -190,7 +194,7 @@ public class Server {
     }
 
     private void create(String path, Socket memberSocket) {
-        File file = new File(sharedDir + path);
+        File file = new File(sharedDir + "\\" + path);
         String reply = "";
 
         if (file.exists()) {
@@ -210,7 +214,7 @@ public class Server {
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
         String[] fileInfo = (new String(buffer)).split(" ");
-        File file = new File(sharedDir + path + "\\" + fileInfo[0]);
+        File file = new File(sharedDir + "\\" + path + "\\" + fileInfo[0]);
 
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
@@ -230,7 +234,7 @@ public class Server {
     private void download(String path, Socket memberSocket) throws IOException {
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
 
-        File file = new File(sharedDir + path);
+        File file = new File(sharedDir + "\\" + path);
         if (!file.exists()) {
             String reply = "File does not exist";
             out.writeInt(reply.length());
@@ -306,9 +310,9 @@ public class Server {
     private void rename(String sourceName, String destName, Socket memberSocket) {
         String reply = "";
 
-        if (new File(sharedDir + sourceName).exists()) {
-            if (!new File(sharedDir + destName).exists()) {
-                new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
+        if (new File(sharedDir + "\\" + sourceName).exists()) {
+            if (!new File(sharedDir + "\\" + destName).exists()) {
+                new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
             } else {
                 reply = "The file exists";
             }
@@ -343,7 +347,7 @@ public class Server {
     }
 
     private void detail(String fileName, Socket memberSocket) {
-        File file = new File(sharedDir + fileName);
+        File file = new File(sharedDir + "\\" + fileName);
         String size = "";
         long length = 0;
         String datefromate = "yyyy-MM-dd HH:mm:ss";

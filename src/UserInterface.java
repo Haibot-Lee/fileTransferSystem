@@ -274,25 +274,36 @@ public class UserInterface {
 
     private JTree constructTree(JTree tree) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        root.add(new DefaultMutableTreeNode("World"));
+        getFiles("", root);
+        DefaultTreeModel treeModel = new DefaultTreeModel(root);
+        tree.setModel(treeModel);
 
+        return tree;
+    }
+
+    private void getFiles(String path, DefaultMutableTreeNode node) {
         try {
-            user.sendCmd("read .");
-            System.out.println(user.getReply());
+            user.sendCmd("read " + path);
+            String reply = user.getReply();
+            String[] files = reply.split(" ");
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].substring(files[i].lastIndexOf("/") + 1);
+                DefaultMutableTreeNode temp = new DefaultMutableTreeNode(fileName);
+                node.add(temp);
+                if (files[i].charAt(0) == 'D') {
+                    getFiles(path + "\\" + fileName, temp);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        DefaultTreeModel tmodel = new DefaultTreeModel(root);
-        tree.setModel(tmodel);
-        return tree;
     }
 
     public static void main(String[] args) {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("share", "members.txt");
+                new Server("out", "members.txt");
             } catch (IOException e) {
                 e.printStackTrace();
             }
