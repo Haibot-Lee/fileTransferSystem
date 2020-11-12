@@ -413,24 +413,31 @@ public class Server {
             }
 
             //send the data to the client
+            String reply = "";
             if (file.isFile()) {
-                System.out.println("type: " + type);
-                System.out.println("name: " + name);
-                System.out.println("position: " + root);
-                System.out.println("size: " + size);
-                System.out.println("size: " + length);
-                System.out.println("create time: " + createdtime);
-                System.out.println("last modified time: " + lastmodifiedtime);
-                System.out.println("interview time: " + currenttime);
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
+                        + "\ninterview time: " + currenttime;
+//                System.out.println("type: " + type);
+//                System.out.println("name: " + name);
+//                System.out.println("position: " + root);
+//                System.out.println("size: " + size);
+//                System.out.println("size: " + length);
+//                System.out.println("create time: " + createdtime);
+//                System.out.println("last modified time: " + lastmodifiedtime);
+//                System.out.println("interview time: " + currenttime);
             } else if (file.isDirectory()) {
-                System.out.println("type: " + type);
-                System.out.println("name: " + name);
-                System.out.println("position: " + root);
-                System.out.println("size: " + size);
-                System.out.println("size: " + length);
-                System.out.println("content: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory");
-                System.out.println("create time: " + createdtime);
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime +
+                        "\ncontent: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory";
+//                System.out.println("type: " + type);
+//                System.out.println("name: " + name);
+//                System.out.println("position: " + root);
+//                System.out.println("size: " + size);
+//                System.out.println("size: " + length);
+//                System.out.println("content: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory");
+//                System.out.println("create time: " + createdtime);
             }
+            System.out.println(reply);
+            reply(reply, memberSocket);
         } else {
             System.out.println("The file doesn't exist");
         }
