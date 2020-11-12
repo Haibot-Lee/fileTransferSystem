@@ -89,7 +89,7 @@ public class Server {
         String[] loginInfo = loginMsg.split(" ");
 
         boolean ifLogin = false;
-        String reply = "member does not exist";
+        String reply = "Member does not exist!";
 
         for (int i = 0; i < memberDB.getSize(); i++) {
             if (loginInfo[0].equals(memberDB.getMember(i).getName())) {
@@ -100,7 +100,7 @@ public class Server {
                     System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
                     break;
                 } else {
-                    reply = "wrong password";
+                    reply = "Wrong password!";
                     break;
                 }
             }
@@ -120,7 +120,7 @@ public class Server {
                 out.writeInt(len);
                 out.write(data, 0, len);
             } catch (IOException e) {
-                // the connection is dropped but the socket is not yet removed.
+                System.err.println("The connection is dropped but the socket is not yet removed");
             }
 
         }

@@ -11,10 +11,6 @@ public class Client {
     ArrayList<String> serversName = new ArrayList<String>();
     Socket tcpSocket;
 
-    public Client() throws IOException {
-
-    }
-
     public void broadcasts(int times) throws IOException {
         DatagramSocket udpSocket = new DatagramSocket(12345);
         byte[] msg = "Finding server...".getBytes();
@@ -142,7 +138,6 @@ public class Client {
     //test area
     public static void main(String[] args) {
         try {
-
             Client c = new Client();
             c.broadcasts(5);
             c.receiveIP();
