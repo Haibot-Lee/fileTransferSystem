@@ -42,7 +42,7 @@ public class Server {
                     String msg = new String(data, 0, packet.getLength());
 
                     if (msg.equals("Finding server...")) {
-                        System.out.println("Request" + i);
+                        System.out.println("Request" + i + " from:");
                         System.out.println(packet.getAddress());
                         System.out.println(packet.getPort());
 
@@ -98,7 +98,7 @@ public class Server {
                     ifLogin = true;
                     reply = "accept";
                     System.out.printf("Total %d clients are connected.\n", list.size());
-                    System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
+                    System.out.printf("Established a connection to host %s:%d\n", memberSocket.getInetAddress(), memberSocket.getPort());
                     break;
                 } else {
                     reply = "Wrong password!";
@@ -183,12 +183,17 @@ public class Server {
 
         File[] files = path.listFiles();
         for (File f : files) {
+            System.out.println(f.getName());
             if (f.isDirectory()) {
-                reply += "D/";
+                if (f.listFiles() != null && f.listFiles().length > 0) {
+                    reply += "D/";
+                } else {
+                    reply += "M/";
+                }
             } else {
                 reply += "F/";
             }
-            reply += f.getName() + " ";
+            reply += f.getName() + "\n";
         }
 
         reply(reply, memberSocket);
@@ -267,7 +272,7 @@ public class Server {
     }
 
     private void delete(String fileName, Socket memberSocket) {
-        File file = new File(sharedDir + fileName);
+        File file = new File(sharedDir + "\\" + fileName);
         String reply = "";
 
         if (file.exists()) {
@@ -348,7 +353,7 @@ public class Server {
     }
 
     private void detail(String fileName, Socket memberSocket) throws IOException {
-        File file = new File(sharedDir+ "\\" + fileName);
+        File file = new File(sharedDir + "\\" + fileName);
         String size = "";
         long length = 0;
         String datefromate = "yyyy-MM-dd HH:mm:ss";
@@ -375,7 +380,7 @@ public class Server {
             lastmodifiedtime = sdf.format(file.lastModified());
 
             //get the create time
-            FileTime t = Files.readAttributes(Paths.get(sharedDir+fileName),BasicFileAttributes.class).creationTime();
+            FileTime t = Files.readAttributes(Paths.get(sharedDir + "\\" + fileName), BasicFileAttributes.class).creationTime();
             createdtime = sdf.format(t.toMillis());
 
             //get current time
@@ -423,7 +428,6 @@ public class Server {
 
     //start server
     public static void main(String[] args) throws IOException {
-        new Server(args[0], args[1]);
-//        new Server("", "members.txt");
+        new Server("test", "members.txt");
     }
 }

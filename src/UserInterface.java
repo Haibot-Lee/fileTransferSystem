@@ -15,6 +15,7 @@ public class UserInterface {
     Client user;
     JFrame loginPage;
     JFrame homePage;
+    JTree fileTree;
 
     public UserInterface() {
         user = new Client();
@@ -157,7 +158,8 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
+//                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
+                    user.login("127.0.0.1", "amy", "123");
                     String reply = user.getReply();
                     if (reply.equals("accept")) {
                         loginPage.setVisible(false);
@@ -182,15 +184,15 @@ public class UserInterface {
         container.setLayout(new GridBagLayout());
 
         //tree
-        JTree tree = new JTree();
-        JScrollPane jsp = new JScrollPane(tree);
+        fileTree = new JTree();
+        JScrollPane jsp = new JScrollPane(fileTree);
         GridBagConstraints p1 = new GridBagConstraints();
         p1.weightx = 80;
         p1.weighty = 100;
         p1.fill = GridBagConstraints.BOTH;
         container.add(jsp, p1);
 
-        tree = constructTree(tree);
+        fileTree = constructTree(fileTree);
 
         //control
         int noOfButtons = 7;
@@ -230,7 +232,7 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                fileTree = constructTree(fileTree);
             }
         });
 
@@ -273,9 +275,9 @@ public class UserInterface {
     }
 
     private JTree constructTree(JTree tree) {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root", true);
         getFiles("", root);
-        DefaultTreeModel treeModel = new DefaultTreeModel(root);
+        DefaultTreeModel treeModel = new DefaultTreeModel(root, true);
         tree.setModel(treeModel);
 
         return tree;
@@ -285,13 +287,20 @@ public class UserInterface {
         try {
             user.sendCmd("read " + path);
             String reply = user.getReply();
-            String[] files = reply.split(" ");
-            for (int i = 0; i < files.length; i++) {
-                String fileName = files[i].substring(files[i].lastIndexOf("/") + 1);
-                DefaultMutableTreeNode temp = new DefaultMutableTreeNode(fileName);
-                node.add(temp);
-                if (files[i].charAt(0) == 'D') {
-                    getFiles(path + "\\" + fileName, temp);
+            if (!reply.equals("")) {
+                String[] files = reply.split("\n");
+                for (int i = 0; i < files.length; i++) {
+                    String fileName = files[i].substring(files[i].lastIndexOf("/") + 1);
+                    DefaultMutableTreeNode temp;
+                    if (files[i].charAt(0) == 'D' || files[i].charAt(0) == 'M') {
+                        temp = new DefaultMutableTreeNode(fileName, true);
+                    } else {
+                        temp = new DefaultMutableTreeNode(fileName, false);
+                    }
+                    node.add(temp);
+                    if (files[i].charAt(0) == 'D') {
+                        getFiles(path + "\\" + fileName, temp);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -303,7 +312,8 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("out", "members.txt");
+                new Server("test", "members.txt");
+//                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
             }

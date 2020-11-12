@@ -30,7 +30,7 @@ public class Client {
 
         Thread timer = new Thread(() -> {
             try {
-                TimeUnit.SECONDS.sleep(3);
+                TimeUnit.SECONDS.sleep(2);
                 udpSocket.close();
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
@@ -79,7 +79,6 @@ public class Client {
     public String getReply() throws IOException {
         String reply = "";
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
-        System.out.println(0);
         try {
             int len = in.readInt();
             byte[] buffer = new byte[len];
@@ -90,7 +89,6 @@ public class Client {
             System.err.println("Connection dropped!");
             System.exit(-1);
         }
-        System.out.println(1);
 
         return reply;
     }
