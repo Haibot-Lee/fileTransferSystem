@@ -174,20 +174,19 @@ public class Server {
             path = new File(sharedDir + fileName);
         }
 
-        File[] files = path.listFiles();
-        ArrayList<String> info = new ArrayList<>();
+        String reply = "";
 
+        File[] files = path.listFiles();
         for (File f : files) {
             if (f.isDirectory()) {
-                info.add(String.format("%s %10s %s\n", new Date(f.lastModified()), "<DIR>", f.getName()));
+                reply += "D/";
             } else {
-                info.add(String.format("%s %9dB %s\n", new Date(f.lastModified()), f.length(), f.getName()));
+                reply += "F/";
             }
+            reply += f.getName() + " ";
         }
 
-        for (String n : info) {
-            System.out.print(n);
-        }
+        reply(reply, memberSocket);
     }
 
     private void create(String path, Socket memberSocket) {
@@ -445,7 +444,7 @@ public class Server {
 
     //start server
     public static void main(String[] args) throws IOException {
-        new Server(args[0], args[1]);
-//        new Server("", "members.txt");
+//        new Server(args[0], args[1]);
+        new Server("out", "members.txt");
     }
 }

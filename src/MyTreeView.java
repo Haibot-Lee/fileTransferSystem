@@ -29,22 +29,43 @@ public class MyTreeView extends JFrame {
         Container container = homePage.getContentPane();
         container.setLayout(new GridBagLayout());
 
+        //tree
         JTree tree = new JTree();
+        JScrollPane jsp = new JScrollPane(tree);
         GridBagConstraints p1 = new GridBagConstraints();
         p1.weightx = 80;
+        p1.weighty = 100;
         p1.fill = GridBagConstraints.BOTH;
-        container.add(tree, p1);
+        container.add(jsp, p1);
 
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Hello");
-        node.add(new DefaultMutableTreeNode("World"));
-        DefaultTreeModel tmodel = new DefaultTreeModel(node);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+        root.add(new DefaultMutableTreeNode("World"));
+        DefaultTreeModel tmodel = new DefaultTreeModel(root);
         tree.setModel(tmodel);
 
-        JPanel buttons = new JPanel(new GridLayout(5, 1));
+        //control
+        int noOfButtons = 7;
+        JPanel control = new JPanel(new GridLayout(noOfButtons, 1));
         GridBagConstraints p2 = new GridBagConstraints();
         p2.gridx = 1;
         p2.weightx = 20;
-        container.add(buttons, p2);
+        p2.fill = GridBagConstraints.BOTH;
+        container.add(control, p2);
+
+        JButton[] buttons = new JButton[noOfButtons];
+        buttons[0] = new JButton("Logout");
+        buttons[1] = new JButton("Create");
+        buttons[2] = new JButton("Upload");
+        buttons[3] = new JButton("Download");
+        buttons[4] = new JButton("Delete");
+        buttons[5] = new JButton("Rename");
+        buttons[6] = new JButton("Detail");
+        for (int i = 0; i < buttons.length; i++) {
+            control.add(buttons[i]);
+        }
+
+        //ActionListeners
+
 
         homePage.setVisible(true);
     }

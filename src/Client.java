@@ -59,7 +59,6 @@ public class Client {
                 break;
             }
         }
-//        System.out.println("Out while");
     }
 
     public void login(String serverIp, String member, String password) throws IOException {
@@ -80,6 +79,7 @@ public class Client {
     public String getReply() throws IOException {
         String reply = "";
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
+        System.out.println(0);
         try {
             int len = in.readInt();
             byte[] buffer = new byte[len];
@@ -90,6 +90,7 @@ public class Client {
             System.err.println("Connection dropped!");
             System.exit(-1);
         }
+        System.out.println(1);
 
         return reply;
     }
@@ -155,6 +156,8 @@ public class Client {
                 while (true) {
                     String str = scanner.nextLine();
                     c.sendCmd(str);
+                    System.out.println(c.getReply());
+
                     if (str.equals("upload")) {
                         c.upload("C:\\Users\\mrli\\Desktop\\test.log");
                     }

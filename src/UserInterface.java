@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
@@ -180,26 +181,118 @@ public class UserInterface {
         Container container = homePage.getContentPane();
         container.setLayout(new GridBagLayout());
 
+        //tree
         JTree tree = new JTree();
+        JScrollPane jsp = new JScrollPane(tree);
         GridBagConstraints p1 = new GridBagConstraints();
         p1.weightx = 80;
+        p1.weighty = 100;
         p1.fill = GridBagConstraints.BOTH;
-        container.add(tree, p1);
+        container.add(jsp, p1);
 
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Hello");
-        node.add(new DefaultMutableTreeNode("World"));
-        DefaultTreeModel tmodel = new DefaultTreeModel(node);
-        tree.setModel(tmodel);
+        tree = constructTree(tree);
 
+        //control
+        int noOfButtons = 7;
+        JPanel control = new JPanel(new GridLayout(noOfButtons, 1));
+        GridBagConstraints p2 = new GridBagConstraints();
+        p2.gridx = 1;
+        p2.weightx = 20;
+        p2.fill = GridBagConstraints.BOTH;
+        container.add(control, p2);
+
+        JButton[] buttons = new JButton[noOfButtons];
+        buttons[0] = new JButton("Logout");
+        buttons[1] = new JButton("Create");
+        buttons[2] = new JButton("Upload");
+        buttons[3] = new JButton("Download");
+        buttons[4] = new JButton("Delete");
+        buttons[5] = new JButton("Rename");
+        buttons[6] = new JButton("Detail");
+        for (int i = 0; i < buttons.length; i++) {
+            control.add(buttons[i]);
+        }
+
+        //ActionListeners
+        buttons[0].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePage.setVisible(false);
+                loginPage.setVisible(true);
+                try {
+                    user.tcpSocket.close();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+
+        buttons[1].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[2].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[3].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[4].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[5].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[6].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
 
         homePage.setVisible(true);
+    }
+
+    private JTree constructTree(JTree tree) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+        root.add(new DefaultMutableTreeNode("World"));
+
+        try {
+            user.sendCmd("read .");
+            System.out.println(user.getReply());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        DefaultTreeModel tmodel = new DefaultTreeModel(root);
+        tree.setModel(tmodel);
+        return tree;
     }
 
     public static void main(String[] args) {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server(args[0], args[1]);
+                new Server("share", "members.txt");
             } catch (IOException e) {
                 e.printStackTrace();
             }
