@@ -2,10 +2,14 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     Client user;
@@ -34,9 +38,11 @@ public class UserInterface {
         container.add(loginInfo);
 
         //Server list
-        JLabel serversLabel = new JLabel("Available server:");
+        JLabel serversLabel = new JLabel("Available servers:");
         GridBagConstraints s0 = new GridBagConstraints();
         s0.gridy = 0;
+        s0.gridwidth = 2;
+        s0.weightx = 50;
         s0.anchor = GridBagConstraints.WEST;
         findServer.add(serversLabel, s0);
 
@@ -44,17 +50,27 @@ public class UserInterface {
         JScrollPane jsp = new JScrollPane(serverList);
         GridBagConstraints s1 = new GridBagConstraints();
         s1.gridy = 1;
-        s1.weightx = 100;
+        s1.gridwidth = 2;
         s1.weighty = 80;
         s1.fill = GridBagConstraints.BOTH;
         findServer.add(jsp, s1);
 
-        JButton broadcast = new JButton("Broadcast");
+        JLabel find = new JLabel();
         GridBagConstraints s2 = new GridBagConstraints();
         s2.gridy = 2;
         s2.weighty = 5;
-        s2.anchor = GridBagConstraints.EAST;
-        findServer.add(broadcast, s2);
+        s2.anchor = GridBagConstraints.WEST;
+        findServer.add(find, s2);
+        find.setVisible(false);
+
+        JButton broadcast = new JButton("Broadcast");
+        GridBagConstraints s3 = new GridBagConstraints();
+        s3.gridx = 1;
+        s3.gridy = 2;
+        s3.weighty = 5;
+        s3.anchor = GridBagConstraints.EAST;
+        findServer.add(broadcast, s3);
+
 
         //Input loginPage info.
         JLabel ipLabel = new JLabel("Input/Choose one Server:");
@@ -111,19 +127,29 @@ public class UserInterface {
         broadcast.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String[] list = new String[20];
-                list[0] = "127.0.0.1";
-                for (int i = 1; i < list.length; i++) {
-                    list[i] = "item" + i;
+                try {
+                    user.broadcasts(5);
+                    user.receiveIP();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                String[] list = new String[user.serversIP.size()];
+                for (int i = 0; i < list.length; i++) {
+                    list[i] = user.serversName.get(i) + " (IP address: " + user.serversIP.get(i) + ")";
                 }
                 serverList.setListData(list);
+                find.setText(list.length + " server(s) are found!");
+                find.setVisible(true);
             }
         });
 
         serverList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                serverIP.setText(serverList.getSelectedValue());
+                String ip = serverList.getSelectedValue();
+                ip = ip.substring(ip.lastIndexOf("/") + 1, ip.length() - 1);
+                serverIP.setText(ip);
             }
         });
 
@@ -155,14 +181,129 @@ public class UserInterface {
         Container container = homePage.getContentPane();
         container.setLayout(new GridBagLayout());
 
+        //tree
+        JTree tree = new JTree();
+        JScrollPane jsp = new JScrollPane(tree);
+        GridBagConstraints p1 = new GridBagConstraints();
+        p1.weightx = 80;
+        p1.weighty = 100;
+        p1.fill = GridBagConstraints.BOTH;
+        container.add(jsp, p1);
+
+        tree = constructTree(tree);
+
+        //control
+        int noOfButtons = 7;
+        JPanel control = new JPanel(new GridLayout(noOfButtons, 1));
+        GridBagConstraints p2 = new GridBagConstraints();
+        p2.gridx = 1;
+        p2.weightx = 20;
+        p2.fill = GridBagConstraints.BOTH;
+        container.add(control, p2);
+
+        JButton[] buttons = new JButton[noOfButtons];
+        buttons[0] = new JButton("Logout");
+        buttons[1] = new JButton("Create");
+        buttons[2] = new JButton("Upload");
+        buttons[3] = new JButton("Download");
+        buttons[4] = new JButton("Delete");
+        buttons[5] = new JButton("Rename");
+        buttons[6] = new JButton("Detail");
+        for (int i = 0; i < buttons.length; i++) {
+            control.add(buttons[i]);
+        }
+
+        //ActionListeners
+        buttons[0].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePage.setVisible(false);
+                loginPage.setVisible(true);
+                try {
+                    user.tcpSocket.close();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+
+        buttons[1].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[2].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[3].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[4].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[5].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        buttons[6].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
         homePage.setVisible(true);
+    }
+
+    private JTree constructTree(JTree tree) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+        getFiles("", root);
+        DefaultTreeModel treeModel = new DefaultTreeModel(root);
+        tree.setModel(treeModel);
+
+        return tree;
+    }
+
+    private void getFiles(String path, DefaultMutableTreeNode node) {
+        try {
+            user.sendCmd("read " + path);
+            String reply = user.getReply();
+            String[] files = reply.split(" ");
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].substring(files[i].lastIndexOf("/") + 1);
+                DefaultMutableTreeNode temp = new DefaultMutableTreeNode(fileName);
+                node.add(temp);
+                if (files[i].charAt(0) == 'D') {
+                    getFiles(path + "\\" + fileName, temp);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server(args[0], args[1]);
+                new Server("out", "members.txt");
             } catch (IOException e) {
                 e.printStackTrace();
             }

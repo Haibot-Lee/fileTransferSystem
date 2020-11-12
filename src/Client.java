@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     ArrayList<String> serversIP = new ArrayList<String>();
@@ -24,35 +25,40 @@ public class Client {
 
     public void receiveIP() throws IOException {
         DatagramSocket udpSocket = new DatagramSocket(12345);
+        serversIP.clear();
+        serversName.clear();
 
-        Thread udp = new Thread(() -> {
-            while (true) {
-                try {
-                    DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
-                    udpSocket.receive(packet);
-                    byte[] data = packet.getData();
-                    String msg = new String(data, 0, packet.getLength());
-                    String[] msgs = msg.split(" ");
-
-                    if (msgs[0].equals("availableServer")) {
-                        String ip = packet.getAddress().toString();
-                        ip = ip.substring(ip.lastIndexOf("/") + 1);
-                        synchronized (serversIP) {
-                            if (!serversIP.contains(ip)) {
-                                serversIP.add(ip);
-                                synchronized (serversName) {
-                                    serversName.add(msgs[1]);
-                                }
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    System.err.println("Failed to receive from server!");
-                }
+        Thread timer = new Thread(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(3);
+                udpSocket.close();
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
         });
-        udp.start();
+        timer.start();
 
+        while (true) {
+            try {
+                DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
+                udpSocket.receive(packet);
+                byte[] data = packet.getData();
+                String msg = new String(data, 0, packet.getLength());
+                String[] msgs = msg.split(" ");
+
+                if (msgs[0].equals("availableServer")) {
+
+                    if (!serversIP.contains(packet.getAddress().toString())) {
+                        serversIP.add(packet.getAddress().toString());
+                        serversName.add(msgs[1]);
+                        System.out.println("One server added");
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("socket closed");
+                break;
+            }
+        }
     }
 
     public void login(String serverIp, String member, String password) throws IOException {
@@ -73,6 +79,7 @@ public class Client {
     public String getReply() throws IOException {
         String reply = "";
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
+        System.out.println(0);
         try {
             int len = in.readInt();
             byte[] buffer = new byte[len];
@@ -83,6 +90,7 @@ public class Client {
             System.err.println("Connection dropped!");
             System.exit(-1);
         }
+        System.out.println(1);
 
         return reply;
     }
@@ -139,24 +147,8 @@ public class Client {
     public static void main(String[] args) {
         try {
             Client c = new Client();
-            c.broadcasts(5);
-            c.receiveIP();
-            while (true) {
-                synchronized (c.serversIP) {
-                    for (int i = 0; i < c.serversIP.size(); i++) {
-                        System.out.println(c.serversIP.get(i));
-                        synchronized (c.serversName) {
-                            System.out.println(c.serversName.get(i));
-                        }
-                    }
-                    if (c.serversIP.size() > 0) {
-                        break;
-                    }
-                }
-            }
-            synchronized (c.serversIP) {
-                c.login(c.serversIP.get(0), "amy", "123");
-            }
+            c.login("127.0.0.1", "amy", "123");
+
             String reply = c.getReply();
             if (reply.equals("accept")) {
                 Scanner scanner = new Scanner(System.in);
@@ -164,6 +156,8 @@ public class Client {
                 while (true) {
                     String str = scanner.nextLine();
                     c.sendCmd(str);
+                    System.out.println(c.getReply());
+
                     if (str.equals("upload")) {
                         c.upload("C:\\Users\\mrli\\Desktop\\test.log");
                     }
