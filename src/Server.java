@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -343,18 +344,18 @@ public class Server {
         return size;
     }
 
-    private void detail(String fileName, Socket memberSocket) {
+    private void detail(String fileName, Socket memberSocket) throws IOException {
         File file = new File(sharedDir + fileName);
         String size = "";
         long length = 0;
         String datefromate = "yyyy-MM-dd HH:mm:ss";
-        String createdtime = "";
         String lastmodifiedtime = "";
         SimpleDateFormat sdf = new SimpleDateFormat(datefromate);
         String currenttime = "";
         String type = "";
         String NumberOfDir = "";
         String NumberOfFile = "";
+        String createdtime = "";
         String root = "";
         String name = "";
         if (file.exists()) {
@@ -362,34 +363,24 @@ public class Server {
             name = file.getName();
 
             //get the position
-            root = file.getAbsolutePath();
+            root = fileName;
 
             //get size which we can directly read
             size = convertthesize((double) file.length());
 
-            //get the created time
-            Path path = Paths.get(fileName);
-            BasicFileAttributeView basicview = Files.getFileAttributeView(path, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
-            BasicFileAttributes attr;
-            try {
-                attr = basicview.readAttributes();
-                Date createDate = new Date(attr.creationTime().toMillis());
-                createdtime = sdf.format(createDate);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            //get last modified time
+            lastmodifiedtime = sdf.format(file.lastModified());
+
+            //get the create time
+            FileTime t = Files.readAttributes(Paths.get(sharedDir+fileName),BasicFileAttributes.class).creationTime();
+            createdtime = sdf.format(t.toMillis());
+
+            //get current time
+            Date date = new Date();
+            currenttime = sdf.format(date);
 
             //get type
             if (file.isFile()) {
-                //get last modified time
-                Calendar cal = Calendar.getInstance();
-                cal.set(1970, 0, 1, 0, 0, 0);
-                lastmodifiedtime = sdf.format(cal.getTime());
-
-                //get current time
-                Date date = new Date();
-                currenttime = sdf.format(date);
-
                 //get type
                 type = "File";
             } else {
@@ -417,26 +408,10 @@ public class Server {
             if (file.isFile()) {
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
-//                System.out.println("type: " + type);
-//                System.out.println("name: " + name);
-//                System.out.println("position: " + root);
-//                System.out.println("size: " + size);
-//                System.out.println("size: " + length);
-//                System.out.println("create time: " + createdtime);
-//                System.out.println("last modified time: " + lastmodifiedtime);
-//                System.out.println("interview time: " + currenttime);
             } else if (file.isDirectory()) {
-                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime +
-                        "\ncontent: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory";
-//                System.out.println("type: " + type);
-//                System.out.println("name: " + name);
-//                System.out.println("position: " + root);
-//                System.out.println("size: " + size);
-//                System.out.println("size: " + length);
-//                System.out.println("content: " + NumberOfFile + "file(s) and " + NumberOfDir + "directory");
-//                System.out.println("create time: " + createdtime);
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
+                        "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
             }
-            System.out.println(reply);
             reply(reply, memberSocket);
         } else {
             System.out.println("The file doesn't exist");
