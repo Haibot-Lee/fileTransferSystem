@@ -45,12 +45,19 @@ public class UserInterface {
         JLabel serversLabel = new JLabel("Available servers:");
         GridBagConstraints s0 = new GridBagConstraints();
         s0.gridy = 0;
-        s0.gridwidth = 2;
         s0.weightx = 50;
         s0.anchor = GridBagConstraints.WEST;
         findServer.add(serversLabel, s0);
 
         JList<String> serverList = new JList<String>();
+//        String[] list = {};
+//        try {
+//            user.broadcasts(3);
+//            list = user.getServer();
+//        } catch (IOException ioException) {
+//            ioException.printStackTrace();
+//        }
+//        serverList.setListData(list);
         JScrollPane jsp = new JScrollPane(serverList);
         GridBagConstraints s1 = new GridBagConstraints();
         s1.gridy = 1;
@@ -59,22 +66,12 @@ public class UserInterface {
         s1.fill = GridBagConstraints.BOTH;
         findServer.add(jsp, s1);
 
-        JLabel find = new JLabel();
-        GridBagConstraints s2 = new GridBagConstraints();
-        s2.gridy = 2;
-        s2.weighty = 5;
-        s2.anchor = GridBagConstraints.WEST;
-        findServer.add(find, s2);
-        find.setVisible(false);
-
         JButton broadcast = new JButton("Broadcast");
         GridBagConstraints s3 = new GridBagConstraints();
-        s3.gridx = 1;
         s3.gridy = 2;
         s3.weighty = 5;
         s3.anchor = GridBagConstraints.EAST;
         findServer.add(broadcast, s3);
-
 
         //Input loginPage info.
         JLabel ipLabel = new JLabel("Input/Choose one Server:");
@@ -131,20 +128,14 @@ public class UserInterface {
         broadcast.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String[] list = {};
                 try {
-                    user.broadcasts(5);
-                    user.receiveIP();
+                    user.broadcasts(3);
+                    list = user.getServer();
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
-
-                String[] list = new String[user.serversIP.size()];
-                for (int i = 0; i < list.length; i++) {
-                    list[i] = user.serversName.get(i) + " (IP address: " + user.serversIP.get(i) + ")";
-                }
                 serverList.setListData(list);
-                find.setText(list.length + " server(s) are found!");
-                find.setVisible(true);
             }
         });
 
@@ -222,6 +213,7 @@ public class UserInterface {
         }
 
         //ActionListeners
+        //get the path of file tree
         fileTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
@@ -241,6 +233,7 @@ public class UserInterface {
             }
         });
 
+        //Logout
         buttons[0].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -254,6 +247,7 @@ public class UserInterface {
             }
         });
 
+        //Create
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -261,28 +255,8 @@ public class UserInterface {
             }
         });
 
+        //Upload
         buttons[2].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-
-        buttons[3].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-
-        buttons[4].addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-
-        buttons[5].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 //                user.sendCmd("upload>"+currentTreePath);
@@ -292,6 +266,41 @@ public class UserInterface {
             }
         });
 
+        //Download
+        buttons[3].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!currentTreePath.equals("")) {
+                    try {
+                        user.sendMsg("download>" + currentTreePath);
+                        String reply = user.download();
+                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+
+        //Delete
+        buttons[4].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        //Rename
+        buttons[5].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        //Detail
         buttons[6].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

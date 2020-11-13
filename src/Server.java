@@ -113,17 +113,14 @@ public class Server {
     }
 
     private void reply(String reply, Socket destSocket) {
-        synchronized (list) {
-            try {
-                byte[] data = reply.getBytes();
-                int len = data.length;
-                DataOutputStream out = new DataOutputStream(destSocket.getOutputStream());
-                out.writeInt(len);
-                out.write(data, 0, len);
-            } catch (IOException e) {
-                System.err.println("The connection is dropped but the socket is not yet removed");
-            }
-
+        try {
+            byte[] data = reply.getBytes();
+            int len = data.length;
+            DataOutputStream out = new DataOutputStream(destSocket.getOutputStream());
+            out.writeInt(len);
+            out.write(data, 0, len);
+        } catch (IOException e) {
+            System.err.println("The connection is dropped but the socket is not yet removed");
         }
     }
 
@@ -248,25 +245,19 @@ public class Server {
     }
 
     private void download(String path, Socket memberSocket) throws IOException {
-        DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
-
         File file = new File(sharedDir + "\\" + path);
-        if (!file.exists()) {
-            String reply = "File does not exist";
-            out.writeInt(reply.length());
-            out.write(reply.getBytes(), 0, reply.length());
-            return;
-        }
+
         if (file.isDirectory()) {
             String reply = "Can not download directory";
-            out.writeInt(reply.length());
-            out.write(reply.getBytes(), 0, reply.length());
+            reply(reply, memberSocket);
             return;
         }
 
         String fileName = file.getName();
         long fileSize = file.length();
-        String fileInfo = String.format("%s %d", fileName, fileSize);
+        String fileInfo = String.format("%s>%d", fileName, fileSize);
+
+        DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
         out.writeInt(fileInfo.length());
         out.write(fileInfo.getBytes(), 0, fileInfo.length());
 

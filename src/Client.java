@@ -8,8 +8,6 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
-    ArrayList<String> serversIP = new ArrayList<String>();
-    ArrayList<String> serversName = new ArrayList<String>();
     Socket tcpSocket;
 
     //UDP
@@ -24,10 +22,10 @@ public class Client {
         udpSocket.close();
     }
 
-    public void receiveIP() throws IOException {
+    public String[] getServer() throws IOException {
         DatagramSocket udpSocket = new DatagramSocket(12345);
-        serversIP.clear();
-        serversName.clear();
+        ArrayList<String> serversIP = new ArrayList<String>();
+        ArrayList<String> serversName = new ArrayList<String>();
 
         Thread timer = new Thread(() -> {
             try {
@@ -60,8 +58,16 @@ public class Client {
                 break;
             }
         }
+
+        String[] list = new String[serversIP.size()];
+        for (int i = 0; i < list.length; i++) {
+            list[i] = serversName.get(i) + " (IP address: " + serversIP.get(i) + ")";
+        }
+
+        return list;
     }
 
+    //TCP
     public void login(String serverIp, String member, String password) throws IOException {
         tcpSocket = new Socket(serverIp, 9999);
         DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
@@ -71,7 +77,6 @@ public class Client {
         out.write(loginInfo.getBytes(), 0, loginInfo.length());
     }
 
-    //TCP
     public void sendMsg(String option) throws IOException {
         DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         out.writeInt(option.length());
@@ -115,31 +120,29 @@ public class Client {
         inFile.close();
     }
 
-    public void download() throws IOException {
-        DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
-        int len = in.readInt();
-        byte[] buffer = new byte[len];
-        in.read(buffer, 0, len);
-        String reply = new String(buffer);
-        if (reply.equals("File does not exist") || reply.equals("Can not download directory")) {
-            System.out.println(reply);
-        } else {
-            String[] fileInfo = reply.split(" ");
-            File file = new File("C:\\Users\\mrli\\Desktop\\" + fileInfo[0]);
-
-            FileOutputStream outFile = new FileOutputStream(file);
-            int size = Integer.parseInt(fileInfo[1]);
-            int transCnt = size / 1024 + 1;
-            for (int i = 0; i < transCnt; i++) {
-                byte[] content = new byte[1024];
-                int len2 = in.readInt();
-                in.read(content, 0, len2);
-                outFile.write(content, 0, len2);
-                size -= 1024;
-            }
-            outFile.close();
-            System.out.println("receive one file");
+    public String download() throws IOException {
+        String reply = getReply();
+        if (reply.equals("Can not download directory")) {
+            return reply;
         }
+
+        String[] fileInfo = reply.split(">");
+        System.out.println(fileInfo[0] + " " + fileInfo[1]);
+        File file = new File("C:\\Users\\mrli\\Desktop\\" + fileInfo[0]);
+
+        DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
+        FileOutputStream outFile = new FileOutputStream(file);
+        int size = Integer.parseInt(fileInfo[1]);
+        int transCnt = size / 1024 + 1;
+        for (int i = 0; i < transCnt; i++) {
+            byte[] content = new byte[1024];
+            int len2 = in.readInt();
+            in.read(content, 0, len2);
+            outFile.write(content, 0, len2);
+            size -= 1024;
+        }
+        outFile.close();
+        return "One file received";
     }
 
     //test area
