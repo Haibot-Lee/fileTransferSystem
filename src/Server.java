@@ -42,7 +42,7 @@ public class Server {
                     String msg = new String(data, 0, packet.getLength());
 
                     if (msg.equals("Finding server...")) {
-                        System.out.println("Request" + i);
+                        System.out.println("Request" + i + " from:");
                         System.out.println(packet.getAddress());
                         System.out.println(packet.getPort());
 
@@ -71,7 +71,6 @@ public class Server {
                     if (loginCheck(memberSocket, memberDB))
                         receiveCmd(memberSocket);
                 } catch (IOException e) {
-                    reply("connection dropped.", memberSocket);
                     System.err.println("connection dropped.");
                 }
                 synchronized (list) {
@@ -99,7 +98,7 @@ public class Server {
                     ifLogin = true;
                     reply = "accept";
                     System.out.printf("Total %d clients are connected.\n", list.size());
-                    System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
+                    System.out.printf("Established a connection to host %s:%d\n", memberSocket.getInetAddress(), memberSocket.getPort());
                     break;
                 } else {
                     reply = "Wrong password!";
@@ -159,17 +158,13 @@ public class Server {
                     delete(options[1], memberSocket);
                     break;
                 case "rename":
-                    if (options.length == 3) {
-                        rename(options[1], options[2], memberSocket);
-                    } else {
-                        reply("Invalid option", memberSocket);
-                    }
+                    rename(options[1], options[2], memberSocket);
                     break;
                 case "detail":
                     detail(options[1], memberSocket);
                     break;
                 default:
-                    reply("Invalid option", memberSocket);
+                    System.out.println("Invalid option");
                     break;
             }
         }
@@ -189,7 +184,11 @@ public class Server {
         File[] files = path.listFiles();
         for (File f : files) {
             if (f.isDirectory()) {
-                reply += "D/";
+                if (f.listFiles() != null && f.listFiles().length > 0) {
+                    reply += "D/";
+                } else {
+                    reply += "M/";
+                }
             } else {
                 reply += "F/";
             }
@@ -272,7 +271,7 @@ public class Server {
     }
 
     private void delete(String fileName, Socket memberSocket) {
-        File file = new File(sharedDir + fileName);
+        File file = new File(sharedDir + "\\" + fileName);
         String reply = "";
 
         if (file.exists()) {
@@ -319,9 +318,8 @@ public class Server {
         if (new File(sharedDir + "\\" + sourceName).exists()) {
             if (!new File(sharedDir + "\\" + destName).exists()) {
                 new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
-                reply = "Renamed successfully";
             } else {
-                reply = "The file exists.";
+                reply = "The file exists";
             }
         } else {
             reply = "The file doesn't exist";
@@ -367,7 +365,6 @@ public class Server {
         String createdtime = "";
         String root = "";
         String name = "";
-        String reply = "";
         if (file.exists()) {
             //get name
             name = file.getName();
@@ -377,13 +374,12 @@ public class Server {
 
             //get size which we can directly read
             size = convertthesize((double) file.length());
-            length = file.length();
 
             //get last modified time
             lastmodifiedtime = sdf.format(file.lastModified());
 
             //get the create time
-            FileTime t = Files.readAttributes(Paths.get(sharedDir + fileName), BasicFileAttributes.class).creationTime();
+            FileTime t = Files.readAttributes(Paths.get(sharedDir + "\\" + fileName), BasicFileAttributes.class).creationTime();
             createdtime = sdf.format(t.toMillis());
 
             //get current time
@@ -415,23 +411,22 @@ public class Server {
             }
 
             //send the data to the client
-
+            String reply = "";
             if (file.isFile()) {
-                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
             } else if (file.isDirectory()) {
-                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + "byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
                         "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
             }
+            reply(reply, memberSocket);
         } else {
-            reply = "The file doesn't exist";
+            System.out.println("The file doesn't exist");
         }
-        reply(reply, memberSocket);
     }
 
     //start server
     public static void main(String[] args) throws IOException {
-//        new Server(args[0], args[1]);
-        new Server("C:\\Users\\Lyman Zuo\\Desktop", "members.txt");
+        new Server("test", "members.txt");
     }
 }
