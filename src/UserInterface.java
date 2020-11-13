@@ -2,8 +2,12 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +20,7 @@ public class UserInterface {
     JFrame loginPage;
     JFrame homePage;
     JTree fileTree;
+    String currentTreePath = "";
 
     public UserInterface() {
         user = new Client();
@@ -194,6 +199,9 @@ public class UserInterface {
 
         fileTree = constructTree(fileTree);
 
+        TreeSelectionModel treeSelect = fileTree.getSelectionModel();
+        treeSelect.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+
         //control
         int noOfButtons = 7;
         JPanel control = new JPanel(new GridLayout(noOfButtons, 1));
@@ -216,6 +224,25 @@ public class UserInterface {
         }
 
         //ActionListeners
+        fileTree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                if (!fileTree.isSelectionEmpty()) {
+                    TreePath selectionPath = fileTree.getSelectionPath();
+                    Object[] paths = selectionPath.getPath();
+
+                    String path = "";
+                    for (int i = 1; i < paths.length; i++) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[i];
+                        path += "\\" + node.getUserObject();
+                    }
+
+                    currentTreePath = path;
+                    System.out.println(path);
+                }
+            }
+        });
+
         buttons[0].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -267,7 +294,27 @@ public class UserInterface {
         buttons[6].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (!currentTreePath.equals("")) {
+                    String[] details = {};
+                    try {
+                        user.sendCmd("detail>" + currentTreePath);
+                        details = user.getReply().split("\n");
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
 
+                    int rows = details.length;
+                    JDialog detail = new JDialog(homePage, "Detail");
+                    Container container = detail.getContentPane();
+                    container.setLayout(new GridLayout(rows, 1));
+                    for (int i = 0; i < rows; i++) {
+                        container.add(new JLabel(details[i]));
+                    }
+                    detail.setBounds(new Rectangle(300, 300));
+                    detail.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
 
@@ -285,7 +332,7 @@ public class UserInterface {
 
     private void getFiles(String path, DefaultMutableTreeNode node) {
         try {
-            user.sendCmd("read " + path);
+            user.sendCmd("read>" + path);
             String reply = user.getReply();
             if (!reply.equals("")) {
                 String[] files = reply.split("\n");
@@ -312,7 +359,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("test", "members.txt");
+                new Server("C:\\Users\\e8252125", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -134,7 +134,7 @@ public class Server {
             byte[] buffer = new byte[len];
             in.read(buffer, 0, len);
             String option = new String(buffer);
-            String[] options = option.split(" ");
+            String[] options = option.split(">");
             System.out.println("Option: " + option);
 
             switch (options[0]) {
@@ -183,7 +183,6 @@ public class Server {
 
         File[] files = path.listFiles();
         for (File f : files) {
-            System.out.println(f.getName());
             if (f.isDirectory()) {
                 if (f.listFiles() != null && f.listFiles().length > 0) {
                     reply += "D/";

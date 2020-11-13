@@ -64,6 +64,19 @@ public class MyTreeView extends JFrame {
             control.add(buttons[i]);
         }
 
+        JToggleButton btn = new JToggleButton("Go...");
+        control.add(btn, BorderLayout.SOUTH);
+        btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JToggleButton btn = (JToggleButton) e.getSource();
+                if (btn.isSelected())
+                    System.out.println("I am on now!");
+                else
+                    System.out.println("I am off now!");
+            }
+        });
+
         //ActionListeners
 
 
