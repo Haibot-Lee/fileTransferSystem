@@ -98,7 +98,7 @@ public class Server {
                     ifLogin = true;
                     reply = "accept";
                     System.out.printf("Total %d clients are connected.\n", list.size());
-                    System.out.printf("Established a connection to host %s:%d\n", memberSocket.getInetAddress(), memberSocket.getPort());
+                    System.out.printf("Established a connection to host %s:%d\n\n", memberSocket.getInetAddress(), memberSocket.getPort());
                     break;
                 } else {
                     reply = "Wrong password!";
@@ -158,13 +158,17 @@ public class Server {
                     delete(options[1], memberSocket);
                     break;
                 case "rename":
-                    rename(options[1], options[2], memberSocket);
+                    if (options.length == 3) {
+                        rename(options[1], options[2], memberSocket);
+                    } else {
+                        reply("Invalid option", memberSocket);
+                    }
                     break;
                 case "detail":
                     detail(options[1], memberSocket);
                     break;
                 default:
-                    System.out.println("Invalid option");
+                    reply("Invalid option", memberSocket);
                     break;
             }
         }
@@ -318,8 +322,9 @@ public class Server {
         if (new File(sharedDir + "\\" + sourceName).exists()) {
             if (!new File(sharedDir + "\\" + destName).exists()) {
                 new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
+                reply = "Renamed successfully";
             } else {
-                reply = "The file exists";
+                reply = "The file exists.";
             }
         } else {
             reply = "The file doesn't exist";
@@ -365,6 +370,7 @@ public class Server {
         String createdtime = "";
         String root = "";
         String name = "";
+        String reply = "";
         if (file.exists()) {
             //get name
             name = file.getName();
@@ -374,12 +380,13 @@ public class Server {
 
             //get size which we can directly read
             size = convertthesize((double) file.length());
+            length = file.length();
 
             //get last modified time
             lastmodifiedtime = sdf.format(file.lastModified());
 
             //get the create time
-            FileTime t = Files.readAttributes(Paths.get(sharedDir + "\\" + fileName), BasicFileAttributes.class).creationTime();
+            FileTime t = Files.readAttributes(Paths.get(sharedDir + fileName), BasicFileAttributes.class).creationTime();
             createdtime = sdf.format(t.toMillis());
 
             //get current time
@@ -411,22 +418,23 @@ public class Server {
             }
 
             //send the data to the client
-            String reply = "";
+
             if (file.isFile()) {
-                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
             } else if (file.isDirectory()) {
-                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "\nsize: " + length + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
+                reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + "byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
                         "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
             }
-            reply(reply, memberSocket);
         } else {
-            System.out.println("The file doesn't exist");
+            reply = "The file doesn't exist";
         }
+        reply(reply, memberSocket);
     }
 
     //start server
     public static void main(String[] args) throws IOException {
-        new Server("test", "members.txt");
+//        new Server(args[0], args[1]);
+        new Server("C:\\Users\\Lyman Zuo\\Desktop", "members.txt");
     }
 }
