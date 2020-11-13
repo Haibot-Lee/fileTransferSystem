@@ -12,6 +12,7 @@ public class Client {
     ArrayList<String> serversName = new ArrayList<String>();
     Socket tcpSocket;
 
+    //UDP
     public void broadcasts(int times) throws IOException {
         DatagramSocket udpSocket = new DatagramSocket(12345);
         byte[] msg = "Finding server...".getBytes();
@@ -70,7 +71,8 @@ public class Client {
         out.write(loginInfo.getBytes(), 0, loginInfo.length());
     }
 
-    public void sendCmd(String option) throws IOException {
+    //TCP
+    public void sendMsg(String option) throws IOException {
         DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         out.writeInt(option.length());
         out.write(option.getBytes(), 0, option.length());
@@ -129,7 +131,6 @@ public class Client {
             int size = Integer.parseInt(fileInfo[1]);
             int transCnt = size / 1024 + 1;
             for (int i = 0; i < transCnt; i++) {
-
                 byte[] content = new byte[1024];
                 int len2 = in.readInt();
                 in.read(content, 0, len2);
@@ -153,7 +154,7 @@ public class Client {
                 System.out.println("Please input options:");
                 while (true) {
                     String str = scanner.nextLine();
-                    c.sendCmd(str);
+                    c.sendMsg(str);
                     System.out.println(c.getReply());
 
                     if (str.equals("upload")) {

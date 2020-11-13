@@ -127,8 +127,15 @@ public class Server {
         }
     }
 
+    private String getReply(Socket memberSocket) throws IOException {
+        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
+
+        return "";
+    }
+
     private void receiveCmd(Socket memberSocket) throws IOException {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
+
         while (true) {
             int len = in.readInt();
             byte[] buffer = new byte[len];
@@ -402,7 +409,7 @@ public class Server {
                 type = "Directory";
 
                 //get the numbers of the files and directory
-                File[] files = file.listFiles();
+                File[] files = file.listFiles(); //TODO 判断files是否为null
                 int numberofdir = 0;
                 int numberoffile = 0;
 

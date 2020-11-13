@@ -12,8 +12,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     Client user;
@@ -287,7 +285,10 @@ public class UserInterface {
         buttons[5].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+//                user.sendCmd("upload>"+currentTreePath);
+//                String s=user.getReply();
+                //judge
+//                user.sendMsg("yes");
             }
         });
 
@@ -297,7 +298,7 @@ public class UserInterface {
                 if (!currentTreePath.equals("")) {
                     String[] details = {};
                     try {
-                        user.sendCmd("detail>" + currentTreePath);
+                        user.sendMsg("detail>" + currentTreePath);
                         details = user.getReply().split("\n");
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
@@ -332,7 +333,7 @@ public class UserInterface {
 
     private void getFiles(String path, DefaultMutableTreeNode node) {
         try {
-            user.sendCmd("read>" + path);
+            user.sendMsg("read>" + path);
             String reply = user.getReply();
             if (!reply.equals("")) {
                 String[] files = reply.split("\n");
@@ -359,7 +360,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\e8252125", "members.txt");
+                new Server("C:\\Users\\mrli\\CS project", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
