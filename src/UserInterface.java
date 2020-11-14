@@ -155,7 +155,7 @@ public class UserInterface {
             public void actionPerformed(ActionEvent e) {
                 try {
 //                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
-                    user.login("127.0.0.1", "amy", "123");
+                    user.login("192.168.1.38", "amy", "123");
                     String reply = user.getReply();
                     if (reply.equals("accept")) {
                         loginPage.setVisible(false);
@@ -335,6 +335,9 @@ public class UserInterface {
                                 user.sendMsg("yes");
                                 JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                                 fileTree = constructTree(fileTree);
+                            }else{
+                                user.sendMsg("no");
+                                JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                             }
                         } else {
                             JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
@@ -492,7 +495,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\mrli\\Desktop", "members.txt");
+                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -502,5 +505,4 @@ public class UserInterface {
 
         UserInterface ui = new UserInterface();
     }
-
 }
