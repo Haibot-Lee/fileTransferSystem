@@ -389,7 +389,7 @@ public class UserInterface {
                 } else {
                     JOptionPane.showMessageDialog(homePage, "Choose one file that you want to rename first!", "", JOptionPane.WARNING_MESSAGE);
                 }
-
+                currentTreePath = "";
                 fileTree = constructTree(fileTree);
             }
         });
@@ -417,7 +417,7 @@ public class UserInterface {
                     detail.setBounds(new Rectangle(300, 300));
                     detail.setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
