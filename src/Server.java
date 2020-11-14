@@ -215,7 +215,7 @@ public class Server {
         String reply = "";
 
         if (file.exists()) {
-            reply = String.format("%s exists!", file.isDirectory() ? "Directory" : "File");
+            reply("The file exists. please input a new name: ",memberSocket);
         } else {
             file.mkdirs();
             reply = "Dir(" + path + ") created";

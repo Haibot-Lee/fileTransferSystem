@@ -288,6 +288,25 @@ public class UserInterface {
         buttons[4].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!currentTreePath.equals("")) {
+                    try{
+                        user.sendMsg("delete>" + currentTreePath);
+                        String getmsg =user.getReply();
+                        if(getmsg.equals("It is not empty. Do you still want to delete it?")){
+                            int n = JOptionPane.showConfirmDialog(null, "It is not empty, do you want to delete it anyway?", "",JOptionPane.YES_NO_OPTION);
+                            if(n == 0){
+                                user.sendMsg("yes");
+                                JOptionPane.showMessageDialog(null, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
+                                fileTree = constructTree(fileTree);
+                            }
+                        }
+                    } catch(IOException ioException){
+                        ioException.printStackTrace();
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "Choose one file that you want to delete first!", "", JOptionPane.WARNING_MESSAGE);
+                }
 
             }
         });
@@ -369,7 +388,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\mrli\\CS project", "members.txt");
+                new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
