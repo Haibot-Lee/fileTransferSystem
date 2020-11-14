@@ -360,19 +360,35 @@ public class UserInterface {
             public void actionPerformed(ActionEvent e) {
                 if (!currentTreePath.equals("")) {
                     String newname = "";
+                    String display = "PLease input a new name: ";
                     try {
-                        newname = JOptionPane.showInputDialog(homePage, "PLease input a new name: ");
 
-                        if (newname == null) {
-                            return;
+                        //this "while" is used to avoid the empty name during using
+                        while(newname.equals("")) {
+                            newname = JOptionPane.showInputDialog(homePage, display);
+                            //to handle cancel option
+                            if (newname == null) return;
+
+                            if (!newname.equals("")) {
+                                user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + "\\" + newname);
+                            } else {
+                                JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "", JOptionPane.INFORMATION_MESSAGE);
+                            }
+
+                            if (user.getReply().equals("Renamed successfully")) {
+                                JOptionPane.showMessageDialog(homePage, "Renamed successfully", "", JOptionPane.INFORMATION_MESSAGE);
+                            }else{
+                                display = "The file exists. please input a new name: ";
+                                newname = "";
+                            }
                         }
 
-                        user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath +"\\"+ newname);
-                        if(user.getReply().equals("Renamed successfully")){
-                            JOptionPane.showMessageDialog(homePage, "Renamed successfully", "", JOptionPane.INFORMATION_MESSAGE);
-                        }else{
 
-                        }
+
+
+//                        else{
+//                            newname = JOptionPane.showInputDialog(homePage, "PLease input a new name: ");
+//                        }
 //                        while (newname.equals("")) {
 //                            user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
 //                            String getmsg = user.getReply();
@@ -463,6 +479,7 @@ public class UserInterface {
 //            ioException.printStackTrace();
 //        }
 //    }
+
 
     private JTree constructTree(JTree tree) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root", true);

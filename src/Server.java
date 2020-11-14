@@ -331,7 +331,6 @@ public class Server {
             reply = "The file doesn't exist";
         }
 
-        System.out.println(reply);
         reply(reply, memberSocket);
     }
 
