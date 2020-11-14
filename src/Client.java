@@ -145,7 +145,7 @@ public class Client {
         return "One file received";
     }
 
-    public void rename() throws IOException{
+    public void rename() throws IOException {
         Scanner in = new Scanner(System.in);
         System.out.print("The file exists. If you want to cancel, please input yes, otherwise please input a new name: ");
         sendMsg(in.nextLine());
@@ -156,48 +156,4 @@ public class Client {
             System.out.println(r);
         }
     }
-
-    //test area
-    public static void main(String[] args) {
-        try {
-            Client c = new Client();
-            c.login("127.0.0.1", "amy", "123");
-
-            String reply = c.getReply();
-            if (reply.equals("accept")) {
-                Scanner scanner = new Scanner(System.in);
-
-                while (true) {
-                    System.out.print("Please input options:");
-                    String str = scanner.nextLine();
-                    c.sendMsg(str);
-
-                    String getmsg = c.getReply();
-
-                    if (str.equals("upload")) {
-                        c.upload("C:\\Users\\mrli\\Desktop\\test.log");
-                    }
-                    if (str.equals("download")) {
-                        c.download();
-                    }
-
-//                    System.out.println(getmsg);
-
-                    if(getmsg.equals("The file exists. please input a new name: ")){
-                        c.rename();
-                    }else{
-                        System.out.println(getmsg);
-                    }
-                }
-            } else {
-                System.out.println(reply);
-            }
-
-        } catch (IOException e) {
-            System.err.println("Unable to connect server");
-            System.exit(-1);
-        }
-
-    }
-
 }
