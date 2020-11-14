@@ -19,6 +19,7 @@ public class UserInterface {
     JFrame homePage;
     JTree fileTree;
     String currentTreePath = "";
+    String createAt = "";
 
     public UserInterface() {
         user = new Client();
@@ -192,7 +193,7 @@ public class UserInterface {
         treeSelect.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
         //control
-        int noOfButtons = 7;
+        int noOfButtons = 8;
         JPanel control = new JPanel(new GridLayout(noOfButtons, 1));
         GridBagConstraints p2 = new GridBagConstraints();
         p2.gridx = 1;
@@ -208,11 +209,13 @@ public class UserInterface {
         buttons[4] = new JButton("Delete");
         buttons[5] = new JButton("Rename");
         buttons[6] = new JButton("Detail");
+        buttons[7] = new JButton("Refresh");
         for (int i = 0; i < buttons.length; i++) {
             control.add(buttons[i]);
         }
 
         //ActionListeners
+
         //get the path of file tree
         fileTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -221,14 +224,28 @@ public class UserInterface {
                     TreePath selectionPath = fileTree.getSelectionPath();
                     Object[] paths = selectionPath.getPath();
 
-                    String path = "";
-                    for (int i = 1; i < paths.length; i++) {
-                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[i];
-                        path += "\\" + node.getUserObject();
+                    if (paths.length == 1) {
+                        currentTreePath = "";
+                        createAt = "";
+                        return;
                     }
 
-                    currentTreePath = path;
-                    System.out.println(path);
+                    String current = "";
+                    for (int i = 1; i < paths.length - 1; i++) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[i];
+                        current += "\\" + node.getUserObject();
+                    }
+
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[paths.length - 1];
+                    if (node.getAllowsChildren()) {
+                        createAt = current + "\\" + node.getUserObject();
+                    } else {
+                        createAt = current;
+                    }
+                    currentTreePath = current + "\\" + node.getUserObject();
+
+                    System.out.println(currentTreePath);
+                    System.out.println(createAt);
                 }
             }
         });
@@ -251,7 +268,19 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fileTree = constructTree(fileTree);
+                String fileName = JOptionPane.showInputDialog("Create a new folder:");
+                try {
+                    user.sendMsg("create>" + createAt + "\\" + fileName);
+                    String reply = user.getReply();
+                    if (reply.endsWith("Created")) {
+                        fileTree = constructTree(fileTree);
+                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
         });
 
@@ -274,7 +303,11 @@ public class UserInterface {
                     try {
                         user.sendMsg("download>" + currentTreePath);
                         String reply = user.download();
-                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                        if (reply.equals("Can not download directory")) {
+                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                        }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
@@ -347,6 +380,14 @@ public class UserInterface {
             }
         });
 
+        //Refresh
+        buttons[7].addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileTree = constructTree(fileTree);
+            }
+        });
+
         homePage.setVisible(true);
     }
 
@@ -388,7 +429,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
+                new Server("C:\\Users\\mrli\\CS project", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -128,7 +128,7 @@ public class Server {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         int len = in.readInt();
         byte[] buffer = new byte[len];
-        in.read(buffer,0,len);
+        in.read(buffer, 0, len);
         String info = new String(buffer);
         System.out.println(info);
         return info;
@@ -176,7 +176,7 @@ public class Server {
                     detail(options[1], memberSocket);
                     break;
                 default:
-                    reply("Invalid option",memberSocket);
+                    reply("Invalid option", memberSocket);
                     break;
             }
         }
@@ -218,9 +218,8 @@ public class Server {
             reply("The file exists. please input a new name: ",memberSocket);
         } else {
             file.mkdirs();
-            reply = "Dir(" + path + ") created";
+            reply = "Created";
         }
-
         System.out.println(reply);
         reply(reply, memberSocket);
     }
@@ -249,7 +248,7 @@ public class Server {
     }
 
     private void download(String path, Socket memberSocket) throws IOException {
-        File file = new File(sharedDir + "\\" + path);
+        File file = new File(sharedDir + path);
 
         if (file.isDirectory()) {
             String reply = "Can not download directory";
@@ -290,11 +289,11 @@ public class Server {
                     file.delete();
                     reply = "Delete successfully";
                 } else {
-                    reply("It is not empty. Do you still want to delete it?",memberSocket);
-                    if(getReply(memberSocket).equals("yes")){
+                    reply("It is not empty. Do you still want to delete it?", memberSocket);
+                    if (getReply(memberSocket).equals("yes")) {
                         deleteAll(file);
                         reply = "Delete successfully";
-                    }else{
+                    } else {
                         reply = "Canceled";
                     }
                 }
@@ -326,11 +325,11 @@ public class Server {
                 new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
                 reply = "Renamed successfully";
             } else {
-                reply("The file exists. please input a new name: ",memberSocket);
+                reply("The file exists. please input a new name: ", memberSocket);
                 String choose = getReply(memberSocket);
-                if(!choose.equals("yes")) {
+                if (!choose.equals("yes")) {
                     rename(sourceName, choose, memberSocket);
-                }else{
+                } else {
                     reply = "Canceled";
                 }
             }
@@ -448,6 +447,6 @@ public class Server {
     //start server
     public static void main(String[] args) throws IOException {
 //        new Server(args[0], args[1]);
-        new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
+        new Server("C:\\Users\\e8252125", "members.txt");
     }
 }

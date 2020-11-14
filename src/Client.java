@@ -128,7 +128,7 @@ public class Client {
 
         String[] fileInfo = reply.split(">");
         System.out.println(fileInfo[0] + " " + fileInfo[1]);
-        File file = new File("C:\\Users\\mrli\\Desktop\\" + fileInfo[0]);
+        File file = new File("C:\\Users\\e8252125\\Desktop\\" + fileInfo[0]);
 
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
@@ -150,9 +150,9 @@ public class Client {
         System.out.print("The file exists. If you want to cancel, please input yes, otherwise please input a new name: ");
         sendMsg(in.nextLine());
         String r = getReply();
-        if(r.equals("The file exists. please input a new name: ")){
+        if (r.equals("The file exists. please input a new name: ")) {
             rename();
-        }else{
+        } else {
             System.out.println(r);
         }
     }
@@ -161,7 +161,7 @@ public class Client {
     public static void main(String[] args) {
         try {
             Client c = new Client();
-            c.login("158.182.8.142", "amy", "123");
+            c.login("127.0.0.1", "amy", "123");
 
             String reply = c.getReply();
             if (reply.equals("accept")) {
