@@ -335,7 +335,7 @@ public class UserInterface {
                                 user.sendMsg("yes");
                                 JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                                 fileTree = constructTree(fileTree);
-                            }else{
+                            } else {
                                 user.sendMsg("no");
                                 JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                             }
@@ -362,28 +362,35 @@ public class UserInterface {
                     String newname = "";
                     try {
                         newname = JOptionPane.showInputDialog(homePage, "PLease input a new name: ");
+
                         if (newname == null) {
                             return;
                         }
 
-                        while (newname.equals("")) {
-                            user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
-                            String getmsg = user.getReply();
-                            if (getmsg.equals("The file exists. please input a new name: ")) {
-//                                rename();
-                                newname = "";
-                                while (getmsg.equals("The file exists. please input a new name: ")) {
-                                    while (newname.equals("")) {
-                                        newname = JOptionPane.showInputDialog(homePage, "It exists, pLease input a new name: ");
-                                        if (newname == null) return;
-                                    }
-                                    user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
-                                    getmsg = user.getReply();
-                                }
-                            } else {
-                                JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
-                            }
+                        user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath +"\\"+ newname);
+                        if(user.getReply().equals("Renamed successfully")){
+                            JOptionPane.showMessageDialog(homePage, "Renamed successfully", "", JOptionPane.INFORMATION_MESSAGE);
+                        }else{
+
                         }
+//                        while (newname.equals("")) {
+//                            user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
+//                            String getmsg = user.getReply();
+//                            if (getmsg.equals("The file exists. please input a new name: ")) {
+//                                newname = "";
+//
+//                                while (newname.equals("")) {
+//                                    newname = JOptionPane.showInputDialog(homePage, "It exists, pLease input a new name: ");
+//                                    if (newname == null) return;
+//
+//                                    user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
+//                                    getmsg = user.getReply();
+//                                }
+//
+//                            } else {
+//                                JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
+//                            }
+//                        }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
