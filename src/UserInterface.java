@@ -272,15 +272,28 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String fileName = JOptionPane.showInputDialog("Create a new folder:");
+                String display = "Create a new folder: ";
+                String fileName = "";
                 try {
-                    user.sendMsg("create>" + createAt + "\\" + fileName);
-                    String reply = user.getReply();
-                    if (reply.endsWith("Created")) {
-                        fileTree = constructTree(fileTree);
-                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
+                    while (fileName.equals("")) {
+                        fileName = JOptionPane.showInputDialog(homePage, display);
+
+                        //this is for cancel option
+                        if (fileName == null) return;
+
+                        if(!fileName.equals("")) {
+                            user.sendMsg("create>" + createAt + "\\" + fileName);
+                            String reply = user.getReply();
+                            if (reply.endsWith("Created")) {
+                                fileTree = constructTree(fileTree);
+                                JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                display = "The file exists. please input a new name: ";
+                                fileName = "";
+                            }
+                        }else{
+                            JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "", JOptionPane.INFORMATION_MESSAGE);
+                        }
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -362,9 +375,8 @@ public class UserInterface {
                     String newname = "";
                     String display = "PLease input a new name: ";
                     try {
-
                         //this "while" is used to avoid the empty name during using
-                        while(newname.equals("")) {
+                        while (newname.equals("")) {
                             newname = JOptionPane.showInputDialog(homePage, display);
                             //to handle cancel option
                             if (newname == null) return;
@@ -374,7 +386,7 @@ public class UserInterface {
 
                                 if (user.getReply().equals("Renamed successfully")) {
                                     JOptionPane.showMessageDialog(homePage, "Renamed successfully", "", JOptionPane.INFORMATION_MESSAGE);
-                                }else{
+                                } else {
                                     display = "The file exists. please input a new name: ";
                                     newname = "";
                                 }
@@ -389,7 +401,6 @@ public class UserInterface {
                 } else {
                     JOptionPane.showMessageDialog(homePage, "Choose one file that you want to rename first!", "", JOptionPane.WARNING_MESSAGE);
                 }
-                currentTreePath = "";
                 fileTree = constructTree(fileTree);
             }
         });
