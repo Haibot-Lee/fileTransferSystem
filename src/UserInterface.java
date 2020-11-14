@@ -12,7 +12,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.Scanner;
 
 public class UserInterface {
     Client user;
@@ -228,8 +227,8 @@ public class UserInterface {
 
                     if (paths.length == 1) {
                         currentTreePath = "";
-                        createAt = "";
                         parentTreePath = "";
+                        createAt = "";
                         return;
                     }
 
@@ -240,13 +239,13 @@ public class UserInterface {
                     }
 
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[paths.length - 1];
-                    if (node.getAllowsChildren()) {
-                        createAt = current + "\\" + node.getUserObject();
-                    } else {
-                        createAt = current;
-                    }
-                    parentTreePath = current + "\\";
                     currentTreePath = current + "\\" + node.getUserObject();
+                    parentTreePath = current;
+                    if (node.getAllowsChildren()) {
+                        createAt = currentTreePath;
+                    } else {
+                        createAt = parentTreePath;
+                    }
 
                     System.out.println(currentTreePath);
                     System.out.println(createAt);
@@ -279,9 +278,9 @@ public class UserInterface {
                     String reply = user.getReply();
                     if (reply.endsWith("Created")) {
                         fileTree = constructTree(fileTree);
-                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -309,15 +308,15 @@ public class UserInterface {
                         user.sendMsg("download>" + currentTreePath);
                         String reply = user.download();
                         if (reply.equals("Can not download directory")) {
-                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
+                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
                         } else {
-                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
                         }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -493,7 +492,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
+                new Server("C:\\Users\\mrli\\Desktop", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();

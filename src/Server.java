@@ -211,7 +211,7 @@ public class Server {
     }
 
     private void create(String path, Socket memberSocket) {
-        File file = new File(sharedDir + "\\" + path);
+        File file = new File(sharedDir + path);
         String reply = "";
 
         if (file.exists()) {
@@ -276,7 +276,7 @@ public class Server {
     }
 
     private void delete(String fileName, Socket memberSocket) throws IOException {
-        File file = new File(sharedDir + "\\" + fileName);
+        File file = new File(sharedDir + fileName);
         String reply = "";
 
         if (file.exists()) {
@@ -361,7 +361,7 @@ public class Server {
     }
 
     private void detail(String fileName, Socket memberSocket) throws IOException {
-        File file = new File(sharedDir + "\\" + fileName);
+        File file = new File(sharedDir + fileName);
         String size = "";
         long length = 0;
         String datefromate = "yyyy-MM-dd HH:mm:ss";
@@ -375,6 +375,7 @@ public class Server {
         String root = "";
         String name = "";
         String reply = "";
+
         if (file.exists()) {
             //get name
             name = file.getName();
@@ -399,10 +400,8 @@ public class Server {
 
             //get type
             if (file.isFile()) {
-                //get type
                 type = "File";
             } else {
-                //get type
                 type = "Directory";
 
                 //get the numbers of the files and directory
@@ -424,7 +423,6 @@ public class Server {
             }
 
             //send the data to the client
-
             if (file.isFile()) {
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
@@ -435,6 +433,7 @@ public class Server {
         } else {
             reply = "The file doesn't exist";
         }
+
         reply(reply, memberSocket);
     }
 }
