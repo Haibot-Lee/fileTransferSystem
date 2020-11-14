@@ -302,9 +302,18 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String fileName = JOptionPane.showInputDialog(homePage, "Input one file you want to upload:", "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
-
-
+                String fileName = "";
+                while (fileName.equals("")) {
+                    fileName = JOptionPane.showInputDialog(homePage, "Input one file you want to upload:", "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
+                    fileName = "members.txt";
+                    if (fileName == null) return;
+                }
+                try {
+                    user.sendMsg("upload>" + createAt);
+                    JOptionPane.showMessageDialog(homePage, user.upload(fileName), "", JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
         });
 

@@ -5,17 +5,12 @@ import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Scanner;
 
 public class Server {
     String sharedDir;
@@ -157,7 +152,11 @@ public class Server {
                     create(options[1], options[2], memberSocket);
                     break;
                 case "upload":
-                    upload(options[1], memberSocket);
+                    if (options.length == 1) {
+                        upload("", memberSocket);
+                    } else {
+                        upload(options[1], memberSocket);
+                    }
                     break;
                 case "download":
                     download(options[1], memberSocket);
@@ -234,8 +233,8 @@ public class Server {
         int len = in.readInt();
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
-        String[] fileInfo = (new String(buffer)).split(" ");
-        File file = new File(sharedDir + "\\" + path + "\\" + fileInfo[0]);
+        String[] fileInfo = (new String(buffer)).split(">");
+        File file = new File(sharedDir + path + "\\" + fileInfo[0]);
 
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
@@ -249,7 +248,6 @@ public class Server {
             size -= 1024;
         }
         outFile.close();
-
     }
 
     private void download(String path, Socket memberSocket) throws IOException {
