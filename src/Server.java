@@ -215,7 +215,7 @@ public class Server {
         String reply = "";
 
         if (file.exists()) {
-            reply("The file exists. please input a new name: ",memberSocket);
+            reply("The file exists. please input a new name: ", memberSocket);
         } else {
             file.mkdirs();
             reply = "Created";
@@ -320,18 +320,12 @@ public class Server {
     private void rename(String sourceName, String destName, Socket memberSocket) throws IOException {
         String reply = "";
 
-        if (new File(sharedDir + "\\" + sourceName).exists()) {
-            if (!new File(sharedDir + "\\" + destName).exists()) {
-                new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
+        if (new File(sharedDir + sourceName).exists()) {
+            if (!new File(sharedDir + destName).exists()) {
+                new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
                 reply = "Renamed successfully";
             } else {
                 reply("The file exists. please input a new name: ", memberSocket);
-                String choose = getReply(memberSocket);
-                if (!choose.equals("yes")) {
-                    rename(sourceName, choose, memberSocket);
-                } else {
-                    reply = "Canceled";
-                }
             }
         } else {
             reply = "The file doesn't exist";
@@ -442,11 +436,5 @@ public class Server {
             reply = "The file doesn't exist";
         }
         reply(reply, memberSocket);
-    }
-
-    //start server
-    public static void main(String[] args) throws IOException {
-//        new Server(args[0], args[1]);
-        new Server("C:\\Users\\e8252125", "members.txt");
     }
 }

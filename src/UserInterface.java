@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Scanner;
 
 public class UserInterface {
     Client user;
@@ -19,6 +20,7 @@ public class UserInterface {
     JFrame homePage;
     JTree fileTree;
     String currentTreePath = "";
+    String parentTreePath = "";
     String createAt = "";
 
     public UserInterface() {
@@ -227,6 +229,7 @@ public class UserInterface {
                     if (paths.length == 1) {
                         currentTreePath = "";
                         createAt = "";
+                        parentTreePath = "";
                         return;
                     }
 
@@ -242,10 +245,12 @@ public class UserInterface {
                     } else {
                         createAt = current;
                     }
+                    parentTreePath = current + "\\";
                     currentTreePath = current + "\\" + node.getUserObject();
 
                     System.out.println(currentTreePath);
                     System.out.println(createAt);
+                    System.out.println(parentTreePath);
                 }
             }
         });
@@ -268,19 +273,15 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String fileName = "";
-                while (fileName.equals("")) {
-                    fileName = JOptionPane.showInputDialog(homePage, "Input the name of new folder:", "Create a new folder:", JOptionPane.YES_NO_CANCEL_OPTION);
-                    if (fileName == null) return;
-                }
+                String fileName = JOptionPane.showInputDialog("Create a new folder:");
                 try {
                     user.sendMsg("create>" + createAt + "\\" + fileName);
                     String reply = user.getReply();
                     if (reply.endsWith("Created")) {
                         fileTree = constructTree(fileTree);
-                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -292,7 +293,10 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+//                user.sendCmd("upload>"+currentTreePath);
+//                String s=user.getReply();
+                //judge
+//                user.sendMsg("yes");
             }
         });
 
@@ -305,15 +309,15 @@ public class UserInterface {
                         user.sendMsg("download>" + currentTreePath);
                         String reply = user.download();
                         if (reply.equals("Can not download directory")) {
-                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
+                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.WARNING_MESSAGE);
                         } else {
-                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, reply, "", JOptionPane.INFORMATION_MESSAGE);
                         }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -327,19 +331,23 @@ public class UserInterface {
                         user.sendMsg("delete>" + currentTreePath);
                         String getmsg = user.getReply();
                         if (getmsg.equals("It is not empty. Do you still want to delete it?")) {
-                            int n = JOptionPane.showConfirmDialog(null, "It is not empty, do you want to delete it anyway?", "", JOptionPane.YES_NO_OPTION);
+                            int n = JOptionPane.showConfirmDialog(homePage, "It is not empty, do you want to delete it anyway?", "", JOptionPane.YES_NO_OPTION);
                             if (n == 0) {
                                 user.sendMsg("yes");
-                                JOptionPane.showMessageDialog(null, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                                 fileTree = constructTree(fileTree);
                             }
+                        } else {
+                            JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
+                            fileTree = constructTree(fileTree);
                         }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "Choose one file that you want to delete first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to delete first!", "", JOptionPane.WARNING_MESSAGE);
                 }
+
 
             }
         });
@@ -348,7 +356,40 @@ public class UserInterface {
         buttons[5].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (!currentTreePath.equals("")) {
+                    String newname = "";
+                    try {
+                        newname = JOptionPane.showInputDialog(homePage, "PLease input a new name: ");
+                        if (newname == null) {
+                            return;
+                        }
 
+                        while (newname.equals("")) {
+                            user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
+                            String getmsg = user.getReply();
+                            if (getmsg.equals("The file exists. please input a new name: ")) {
+//                                rename();
+                                newname = "";
+                                while (getmsg.equals("The file exists. please input a new name: ")) {
+                                    while (newname.equals("")) {
+                                        newname = JOptionPane.showInputDialog(homePage, "It exists, pLease input a new name: ");
+                                        if (newname == null) return;
+                                    }
+                                    user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
+                                    getmsg = user.getReply();
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
+                            }
+                        }
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to rename first!", "", JOptionPane.WARNING_MESSAGE);
+                }
+
+                fileTree = constructTree(fileTree);
             }
         });
 
@@ -375,7 +416,7 @@ public class UserInterface {
                     detail.setBounds(new Rectangle(300, 300));
                     detail.setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -390,6 +431,29 @@ public class UserInterface {
 
         homePage.setVisible(true);
     }
+
+//    private void rename() throws IOException {
+//        String newname = "";
+//        try {
+//            newname = JOptionPane.showInputDialog(homePage, "It exists, pLease input a new name: ");
+//            if (newname == null) {
+//                JOptionPane.showMessageDialog(homePage, "Canceled.", "", JOptionPane.WARNING_MESSAGE);
+//            } else if (!newname.equals("")) {
+//                user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + newname);
+//                String getmsg = user.getReply();
+//                if (getmsg.equals("The file exists. please input a new name: ")) {
+//                    rename();
+//                } else {
+//                    JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
+//                }
+//            } else {
+//                JOptionPane.showMessageDialog(homePage, "Please input a name.", "", JOptionPane.WARNING_MESSAGE);
+//                rename();
+//            }
+//        } catch (IOException ioException) {
+//            ioException.printStackTrace();
+//        }
+//    }
 
     private JTree constructTree(JTree tree) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root", true);
@@ -429,7 +493,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\e8252125", "members.txt");
+                new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
