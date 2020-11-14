@@ -223,7 +223,7 @@ public class Server {
                 reply = "Created";
             }
         } else {
-            reply = "The file exists. please input a new name: ";
+            reply = "Exists already";
         }
         System.out.println(reply);
         reply(reply, memberSocket);
@@ -249,7 +249,7 @@ public class Server {
             size -= 1024;
         }
         outFile.close();
-        System.out.println("receive one file");
+
     }
 
     private void download(String path, Socket memberSocket) throws IOException {

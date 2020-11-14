@@ -155,7 +155,7 @@ public class UserInterface {
             public void actionPerformed(ActionEvent e) {
                 try {
 //                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
-                    user.login("192.168.1.38", "amy", "123");
+                    user.login("127.0.0.1", "amy", "123");
                     String reply = user.getReply();
                     if (reply.equals("accept")) {
                         loginPage.setVisible(false);
@@ -272,46 +272,26 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String display = "Please input the name: ";
-                String fileName = "";
-                String type = "";
-                String s = "";
-                boolean choose = true;
                 try {
-                    while (fileName.equals("")) {
-                        if(choose){
-                            Object[] obj2 = {"File", "Folder"};
-                            s = (String) JOptionPane.showInputDialog(homePage, "Please choose to create file or folder\n", "", JOptionPane.PLAIN_MESSAGE, new ImageIcon("icon.png"), obj2, "");
-                            if (s == null) return;
-                        }
+                    String type = (String) JOptionPane.showInputDialog(homePage, "Create file or folder?", "Create", JOptionPane.PLAIN_MESSAGE, null, new String[]{"Folder", "File"}, null);
+                    if (type == null) return;
 
-                        fileName = JOptionPane.showInputDialog(homePage, display);
+                    String fileName;
+                    String display = "Please input the name: ";
+                    do {
+                        do {
+                            fileName = JOptionPane.showInputDialog(homePage, display);
+                            if (fileName == null) return;
+                            display = type + " name can not be null!";
+                        } while (fileName.equals(""));
 
-                        //this is for cancel option
-                        if (fileName == null) return;
+                        user.sendMsg("create>" + type + ">" + createAt + "\\" + fileName);
+                        display = type + " exist already! Use another name: ";
+                    } while (user.getReply().equals("Exists already"));
 
-                        if (!fileName.equals("")) {
-                            System.out.println(s);
-                            user.sendMsg("create>" + s + ">" + createAt + "\\" + fileName);
-                            if (user.getReply().equals("Created")) {
-                                fileTree = constructTree(fileTree);
-                                JOptionPane.showMessageDialog(homePage, "Created!", "", JOptionPane.INFORMATION_MESSAGE);
-                            } else {
-                                JOptionPane.showMessageDialog(homePage, "It exists!", "", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Created!", "", JOptionPane.INFORMATION_MESSAGE);
+                    fileTree = constructTree(fileTree);
 
-                                int n = JOptionPane.showConfirmDialog(homePage, "Do you want to change a name?", "", JOptionPane.YES_NO_OPTION);
-                                if (n == 0) {
-                                    fileName = "";
-                                    choose = false;
-                                } else {
-                                    display = "The file exists. please input a new name: ";
-                                    fileName = "";
-                                }
-                            }
-                        } else {
-                            JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
@@ -322,10 +302,9 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                user.sendCmd("upload>"+currentTreePath);
-//                String s=user.getReply();
-                //judge
-//                user.sendMsg("yes");
+                String fileName = JOptionPane.showInputDialog(homePage, "Input one file you want to upload:", "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
+
+
             }
         });
 
@@ -499,7 +478,7 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
+                new Server("C:\\Users\\mrli\\Desktop", "members.txt");
 //                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
