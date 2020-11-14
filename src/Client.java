@@ -145,6 +145,30 @@ public class Client {
         return "One file received";
     }
 
+    public void delete() throws IOException{
+        Scanner in = new Scanner(System.in);
+        while(true) {
+            System.out.print("It is not empty. Do you still want to delete it?");
+            String choose = in.nextLine();
+            if(choose.equals("yes") || choose.equals("no")){
+                sendMsg(choose);
+                break;
+            }
+        }
+    }
+
+    public void rename() throws IOException{
+        Scanner in = new Scanner(System.in);
+        System.out.print("The file exists. If you want to cancel, please input yes, otherwise please input a new name: ");
+        sendMsg(in.nextLine());
+        String r = getReply();
+        if(r.equals("The file exists. please input a new name: ")){
+            rename();
+        }else{
+            System.out.println(r);
+        }
+    }
+
     //test area
     public static void main(String[] args) {
         try {
@@ -154,17 +178,30 @@ public class Client {
             String reply = c.getReply();
             if (reply.equals("accept")) {
                 Scanner scanner = new Scanner(System.in);
-                System.out.println("Please input options:");
+
                 while (true) {
+                    System.out.print("Please input options:");
                     String str = scanner.nextLine();
                     c.sendMsg(str);
-                    System.out.println(c.getReply());
+
+                    String getmsg = c.getReply();
 
                     if (str.equals("upload")) {
                         c.upload("C:\\Users\\mrli\\Desktop\\test.log");
                     }
                     if (str.equals("download")) {
                         c.download();
+                    }
+
+//                    System.out.println(getmsg);
+
+                    if(getmsg.equals("It is not empty. Do you still want to delete it?")){
+                        c.delete();
+                        System.out.println(c.getReply());
+                    }else if(getmsg.equals("The file exists. please input a new name: ")){
+                        c.rename();
+                    }else{
+                        System.out.println(getmsg);
                     }
                 }
             } else {

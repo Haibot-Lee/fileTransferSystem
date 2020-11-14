@@ -126,8 +126,12 @@ public class Server {
 
     private String getReply(Socket memberSocket) throws IOException {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
-
-        return "";
+        int len = in.readInt();
+        byte[] buffer = new byte[len];
+        in.read(buffer,0,len);
+        String info = new String(buffer);
+        System.out.println(info);
+        return info;
     }
 
     private void receiveCmd(Socket memberSocket) throws IOException {
@@ -172,7 +176,7 @@ public class Server {
                     detail(options[1], memberSocket);
                     break;
                 default:
-                    reply("Invalid option", memberSocket);
+                    reply("Invalid option",memberSocket);
                     break;
             }
         }
@@ -272,7 +276,7 @@ public class Server {
         inFile.close();
     }
 
-    private void delete(String fileName, Socket memberSocket) {
+    private void delete(String fileName, Socket memberSocket) throws IOException {
         File file = new File(sharedDir + "\\" + fileName);
         String reply = "";
 
@@ -286,12 +290,12 @@ public class Server {
                     file.delete();
                     reply = "Delete successfully";
                 } else {
-                    Scanner in = new Scanner(System.in);
-                    System.out.println("The directory " + fileName + " is not empty! Do you still want to delete it?");
-                    String op = in.nextLine();
-                    if (op.equals("yes")) {
+                    reply("It is not empty. Do you still want to delete it?",memberSocket);
+                    if(getReply(memberSocket).equals("yes")){
                         deleteAll(file);
                         reply = "Delete successfully";
+                    }else{
+                        reply = "Canceled";
                     }
                 }
             }
@@ -314,7 +318,7 @@ public class Server {
         file.delete();
     }
 
-    private void rename(String sourceName, String destName, Socket memberSocket) {
+    private void rename(String sourceName, String destName, Socket memberSocket) throws IOException {
         String reply = "";
 
         if (new File(sharedDir + "\\" + sourceName).exists()) {
@@ -322,7 +326,13 @@ public class Server {
                 new File(sharedDir + "\\" + sourceName).renameTo(new File(sharedDir + "\\" + destName));
                 reply = "Renamed successfully";
             } else {
-                reply = "The file exists.";
+                reply("The file exists. please input a new name: ",memberSocket);
+                String choose = getReply(memberSocket);
+                if(!choose.equals("yes")) {
+                    rename(sourceName, choose, memberSocket);
+                }else{
+                    reply = "Canceled";
+                }
             }
         } else {
             reply = "The file doesn't exist";
@@ -337,16 +347,19 @@ public class Server {
         String size = "";
         if (value < 1024) {
             size = value + "B";
+            return size;
         } else {
             value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
         }
         if (value < 1024) {
             size = value + "KB";
+            return size;
         } else {
             value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
         }
         if (value < 1024) {
             size = value + "MB";
+            return size;
         } else {
             value = new BigDecimal(value / 1024).setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
             size = value + "GB";
@@ -377,8 +390,8 @@ public class Server {
             root = fileName;
 
             //get size which we can directly read
-            size = convertthesize((double) file.length());
             length = file.length();
+            size = convertthesize((double) length);
 
             //get last modified time
             lastmodifiedtime = sdf.format(file.lastModified());
@@ -400,13 +413,15 @@ public class Server {
                 type = "Directory";
 
                 //get the numbers of the files and directory
-                File[] files = file.listFiles(); //TODO 判断files是否为null
+                File[] files = file.listFiles();
                 int numberofdir = 0;
                 int numberoffile = 0;
 
                 for (File f : files) {
                     if (f.isDirectory()) {
-                        numberofdir++;
+                        if (f.listFiles() != null && f.listFiles().length >= 0) {
+                            numberofdir++;
+                        }
                     } else {
                         numberoffile++;
                     }
@@ -433,6 +448,6 @@ public class Server {
     //start server
     public static void main(String[] args) throws IOException {
 //        new Server(args[0], args[1]);
-        new Server("C:\\Users\\Lyman Zuo\\Desktop", "members.txt");
+        new Server("C:\\Users\\e8250297\\Desktop", "members.txt");
     }
 }
