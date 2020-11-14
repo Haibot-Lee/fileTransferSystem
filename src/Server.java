@@ -154,7 +154,7 @@ public class Server {
                     }
                     break;
                 case "create":
-                    create(options[1], memberSocket);
+                    create(options[1], options[2], memberSocket);
                     break;
                 case "upload":
                     upload(options[1], memberSocket);
@@ -210,15 +210,20 @@ public class Server {
         reply(reply, memberSocket);
     }
 
-    private void create(String path, Socket memberSocket) {
+    private void create(String type, String path, Socket memberSocket) throws IOException {
         File file = new File(sharedDir + path);
         String reply = "";
 
-        if (file.exists()) {
-            reply("The file exists. please input a new name: ", memberSocket);
+        if (!file.exists()) {
+            if (type.equals("Folder")) {
+                file.mkdirs();
+                reply = "Created";
+            } else {
+                file.createNewFile();
+                reply = "Created";
+            }
         } else {
-            file.mkdirs();
-            reply = "Created";
+            reply = "The file exists. please input a new name: ";
         }
         System.out.println(reply);
         reply(reply, memberSocket);

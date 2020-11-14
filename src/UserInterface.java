@@ -272,26 +272,43 @@ public class UserInterface {
         buttons[1].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String display = "Create a new folder: ";
+                String display = "Please input the name: ";
                 String fileName = "";
+                String type = "";
+                String s = "";
+                boolean choose = true;
                 try {
                     while (fileName.equals("")) {
+                        if(choose){
+                            Object[] obj2 = {"File", "Folder"};
+                            s = (String) JOptionPane.showInputDialog(homePage, "Please choose to create file or folder\n", "", JOptionPane.PLAIN_MESSAGE, new ImageIcon("icon.png"), obj2, "");
+                            if (s == null) return;
+                        }
+
                         fileName = JOptionPane.showInputDialog(homePage, display);
 
                         //this is for cancel option
                         if (fileName == null) return;
 
-                        if(!fileName.equals("")) {
-                            user.sendMsg("create>" + createAt + "\\" + fileName);
-                            String reply = user.getReply();
-                            if (reply.endsWith("Created")) {
+                        if (!fileName.equals("")) {
+                            System.out.println(s);
+                            user.sendMsg("create>" + s + ">" + createAt + "\\" + fileName);
+                            if (user.getReply().equals("Created")) {
                                 fileTree = constructTree(fileTree);
-                                JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(homePage, "Created!", "", JOptionPane.INFORMATION_MESSAGE);
                             } else {
-                                display = "The file exists. please input a new name: ";
-                                fileName = "";
+                                JOptionPane.showMessageDialog(homePage, "It exists!", "", JOptionPane.INFORMATION_MESSAGE);
+
+                                int n = JOptionPane.showConfirmDialog(homePage, "Do you want to change a name?", "", JOptionPane.YES_NO_OPTION);
+                                if (n == 0) {
+                                    fileName = "";
+                                    choose = false;
+                                } else {
+                                    display = "The file exists. please input a new name: ";
+                                    fileName = "";
+                                }
                             }
-                        }else{
+                        } else {
                             JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "", JOptionPane.INFORMATION_MESSAGE);
                         }
                     }
