@@ -125,7 +125,6 @@ public class Server {
         byte[] buffer = new byte[len];
         in.read(buffer, 0, len);
         String info = new String(buffer);
-        System.out.println(info);
         return info;
     }
 
@@ -229,13 +228,18 @@ public class Server {
     }
 
     private void upload(String path, Socket memberSocket) throws IOException {
-        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
-        int len = in.readInt();
-        byte[] buffer = new byte[len];
-        in.read(buffer, 0, len);
-        String[] fileInfo = (new String(buffer)).split(">");
+        String[] fileInfo = getReply(memberSocket).split(">");
         File file = new File(sharedDir + path + "\\" + fileInfo[0]);
+        if (file.exists()) {
+            reply("Exists", memberSocket);
+        } else {
+            reply("Can upload", memberSocket);
+        }
+        if (getReply(memberSocket).equals("Stop upload")) {
+            return;
+        }
 
+        DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
         int transCnt = size / 1024 + 1;

@@ -11,6 +11,8 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class UserInterface {
@@ -302,15 +304,42 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String fileName = "";
-                while (fileName.equals("")) {
-                    fileName = JOptionPane.showInputDialog(homePage, "Input one file you want to upload:", "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
-                    fileName = "members.txt";
-                    if (fileName == null) return;
+                File file = null;
+                String display = "Input one file you want to upload:";
+                while (file == null) {
+                    String filePath = JOptionPane.showInputDialog(homePage, display, "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
+                    if (filePath == null) return;
+                    file = new File(filePath);
+                    if (!file.exists()) {
+                        file = null;
+                        display = "File does not exists!";
+                    }
                 }
+
                 try {
                     user.sendMsg("upload>" + createAt);
-                    JOptionPane.showMessageDialog(homePage, user.upload(fileName), "", JOptionPane.INFORMATION_MESSAGE);
+
+                    String fileInfo = String.format("%s>%d", file.getName(), file.length());
+                    user.sendMsg(fileInfo);
+                    String reply = user.getReply();
+                    if (reply.equals("Exists")) {
+                        int n = JOptionPane.showConfirmDialog(homePage, "File already exists, cover or not?", "Upload", JOptionPane.YES_NO_OPTION);
+                        if (n == 0) {
+                            user.sendMsg("Continue upload");
+                            display = "One file Covered!";
+                        } else {
+                            user.sendMsg("Stop upload");
+                            return;
+                        }
+                    } else {
+                        user.sendMsg("Continue upload");
+                        display = "One file uploaded";
+                    }
+
+                    user.upload(file);
+                    JOptionPane.showMessageDialog(homePage, display, "Upload", JOptionPane.INFORMATION_MESSAGE);
+                    fileTree = constructTree(fileTree);
+
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
@@ -348,7 +377,7 @@ public class UserInterface {
                         user.sendMsg("delete>" + currentTreePath);
                         String getmsg = user.getReply();
                         if (getmsg.equals("It is not empty. Do you still want to delete it?")) {
-                            int n = JOptionPane.showConfirmDialog(homePage, "It is not empty, do you want to delete it anyway?", "", JOptionPane.YES_NO_OPTION);
+                            int n = JOptionPane.showConfirmDialog(homePage, "It is not empty, do you want to delete it anyway?", "Rename", JOptionPane.YES_NO_OPTION);
                             if (n == 0) {
                                 user.sendMsg("yes");
                                 JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);

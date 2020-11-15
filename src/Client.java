@@ -100,15 +100,9 @@ public class Client {
         return reply;
     }
 
-    public String upload(String filePath) throws IOException {
-        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
-        File file = new File(filePath);
-        String fileName = file.getName();
+    public void upload(File file) throws IOException {
         long fileSize = file.length();
-        String fileInfo = String.format("%s>%d", fileName, fileSize);
-        out.writeInt(fileInfo.length());
-        out.write(fileInfo.getBytes(), 0, fileInfo.length());
-
+        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
         while (fileSize > 0) {
             byte[] buffer = new byte[1024];
@@ -118,8 +112,6 @@ public class Client {
             out.write(buffer, 0, len);
         }
         inFile.close();
-
-        return "One file uploaded";
     }
 
     public String download() throws IOException {
