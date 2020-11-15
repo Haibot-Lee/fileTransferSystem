@@ -12,7 +12,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class UserInterface {
@@ -20,13 +19,14 @@ public class UserInterface {
     JFrame loginPage;
     JFrame homePage;
     JTree fileTree;
+
+    DefaultMutableTreeNode currentNode;
     String currentTreePath = "";
     String parentTreePath = "";
     String createAt = "";
 
     public UserInterface() {
         user = new Client();
-
         //login first
         loginPage();
     }
@@ -228,6 +228,7 @@ public class UserInterface {
                     Object[] paths = selectionPath.getPath();
 
                     if (paths.length == 1) {
+                        currentNode = (DefaultMutableTreeNode) paths[0];
                         currentTreePath = "";
                         parentTreePath = "";
                         createAt = "";
@@ -240,15 +241,16 @@ public class UserInterface {
                         current += "\\" + node.getUserObject();
                     }
 
-                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[paths.length - 1];
-                    currentTreePath = current + "\\" + node.getUserObject();
+                    currentNode = (DefaultMutableTreeNode) paths[paths.length - 1];
+                    currentTreePath = current + "\\" + currentNode.getUserObject();
                     parentTreePath = current;
-                    if (node.getAllowsChildren()) {
+                    if (currentNode.getAllowsChildren()) {
                         createAt = currentTreePath;
                     } else {
                         createAt = parentTreePath;
                     }
 
+                    System.out.println(currentNode);
                     System.out.println(currentTreePath);
                     System.out.println(createAt);
                     System.out.println(parentTreePath);
@@ -291,7 +293,7 @@ public class UserInterface {
                         display = type + " exist already! Use another name: ";
                     } while (user.getReply().equals("Exists already"));
 
-                    JOptionPane.showMessageDialog(homePage, "Created!", "", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Created!", "Create", JOptionPane.INFORMATION_MESSAGE);
                     fileTree = constructTree(fileTree);
 
                 } catch (IOException ioException) {
@@ -333,7 +335,7 @@ public class UserInterface {
                         }
                     } else {
                         user.sendMsg("Continue upload");
-                        display = "One file uploaded";
+                        display = "One file uploaded!";
                     }
 
                     user.upload(file);
@@ -350,20 +352,31 @@ public class UserInterface {
         buttons[3].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!currentTreePath.equals("")) {
+                if (!currentTreePath.equals("") && !currentNode.getAllowsChildren()) {
+                    String destPath = "";
+                    String display = "Input where you want to download to:\n(eg. C:\\User\\Desktop)";
+                    while (destPath.equals("")) {
+                        destPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
+                        if (destPath == null) return;
+                        File file = new File(destPath);
+                        if (!file.exists() || !file.isDirectory()) {
+                            display = "Position is invalid!\n(eg. C:\\User\\Desktop)";
+                            destPath = "";
+                        }
+                    }
+
                     try {
                         user.sendMsg("download>" + currentTreePath);
-                        String reply = user.download();
-                        if (reply.equals("Can not download directory")) {
-                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.WARNING_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(homePage, reply, "", JOptionPane.INFORMATION_MESSAGE);
-                        }
+                        user.download(destPath);
+                        JOptionPane.showMessageDialog(homePage, "One file downloaded!", "Download", JOptionPane.INFORMATION_MESSAGE);
+
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
+                } else if (currentNode.getAllowsChildren()) {
+                    JOptionPane.showMessageDialog(homePage, "Can not download directory", "Download", JOptionPane.WARNING_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to download first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to download first!", "Download", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -375,8 +388,8 @@ public class UserInterface {
                 if (!currentTreePath.equals("")) {
                     try {
                         user.sendMsg("delete>" + currentTreePath);
-                        String getmsg = user.getReply();
-                        if (getmsg.equals("It is not empty. Do you still want to delete it?")) {
+                        String getMsg = user.getReply();
+                        if (getMsg.equals("It is not empty. Do you still want to delete it?")) {
                             int n = JOptionPane.showConfirmDialog(homePage, "It is not empty, do you want to delete it anyway?", "Rename", JOptionPane.YES_NO_OPTION);
                             if (n == 0) {
                                 user.sendMsg("yes");
@@ -387,14 +400,14 @@ public class UserInterface {
                                 JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
                             }
                         } else {
-                            JOptionPane.showMessageDialog(homePage, getmsg, "", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(homePage, getMsg, "", JOptionPane.INFORMATION_MESSAGE);
                             fileTree = constructTree(fileTree);
                         }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to delete first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to delete first!", "Delete", JOptionPane.WARNING_MESSAGE);
                 }
 
 
@@ -406,34 +419,34 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!currentTreePath.equals("")) {
-                    String newname = "";
+                    String newName = "";
                     String display = "PLease input a new name: ";
                     try {
                         //this "while" is used to avoid the empty name during using
-                        while (newname.equals("")) {
-                            newname = JOptionPane.showInputDialog(homePage, display);
+                        while (newName.equals("")) {
+                            newName = JOptionPane.showInputDialog(homePage, display);
                             //to handle cancel option
-                            if (newname == null) return;
+                            if (newName == null) return;
 
-                            if (!newname.equals("")) {
-                                user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + "\\" + newname);
+                            if (!newName.equals("")) {
+                                user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + "\\" + newName);
 
                                 if (user.getReply().equals("Renamed successfully")) {
-                                    JOptionPane.showMessageDialog(homePage, "Renamed successfully", "", JOptionPane.INFORMATION_MESSAGE);
+                                    JOptionPane.showMessageDialog(homePage, "Renamed successfully", "Rename", JOptionPane.INFORMATION_MESSAGE);
                                 } else {
                                     display = "The file exists. please input a new name: ";
-                                    newname = "";
+                                    newName = "";
                                 }
 
                             } else {
-                                JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(homePage, "The name cannot be empty!", "Rename", JOptionPane.INFORMATION_MESSAGE);
                             }
                         }
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to rename first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to rename first!", "Rename", JOptionPane.WARNING_MESSAGE);
                 }
                 fileTree = constructTree(fileTree);
             }
@@ -462,7 +475,7 @@ public class UserInterface {
                     detail.setBounds(new Rectangle(300, 300));
                     detail.setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "Detail", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -483,6 +496,11 @@ public class UserInterface {
         getFiles("", root);
         DefaultTreeModel treeModel = new DefaultTreeModel(root, true);
         tree.setModel(treeModel);
+
+        currentNode = root;
+        currentTreePath = "";
+        parentTreePath = "";
+        createAt = "";
 
         return tree;
     }

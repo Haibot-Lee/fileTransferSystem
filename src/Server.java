@@ -235,20 +235,24 @@ public class Server {
         } else {
             reply("Can upload", memberSocket);
         }
-        if (getReply(memberSocket).equals("Stop upload")) {
+        String reply = getReply(memberSocket);
+        if (reply.equals("Stop upload")) {
             return;
         }
 
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
-        int transCnt = size / 1024 + 1;
+        int transCnt = 0;
+        if (size > 0) {
+            transCnt = size / 1024 + 1;
+        }
         for (int i = 0; i < transCnt; i++) {
 
             byte[] content = new byte[1024];
-            int len2 = in.readInt();
-            in.read(content, 0, len2);
-            outFile.write(content, 0, len2);
+            int len = in.readInt();
+            in.read(content, 0, len);
+            outFile.write(content, 0, len);
             size -= 1024;
         }
         outFile.close();
@@ -257,20 +261,12 @@ public class Server {
     private void download(String path, Socket memberSocket) throws IOException {
         File file = new File(sharedDir + path);
 
-        if (file.isDirectory()) {
-            String reply = "Can not download directory";
-            reply(reply, memberSocket);
-            return;
-        }
-
         String fileName = file.getName();
         long fileSize = file.length();
         String fileInfo = String.format("%s>%d", fileName, fileSize);
+        reply(fileInfo, memberSocket);
 
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
-        out.writeInt(fileInfo.length());
-        out.write(fileInfo.getBytes(), 0, fileInfo.length());
-
         FileInputStream inFile = new FileInputStream(file);
         while (fileSize > 0) {
             byte[] buffer = new byte[1024];
@@ -342,7 +338,7 @@ public class Server {
     }
 
     //calculate the size of the file and convert it to the version which we can directly read
-    private String convertthesize(double value) {
+    private String convertSize(double value) {
         String size = "";
         if (value < 1024) {
             size = value + "B";
@@ -370,9 +366,9 @@ public class Server {
         File file = new File(sharedDir + fileName);
         String size = "";
         long length = 0;
-        String datefromate = "yyyy-MM-dd HH:mm:ss";
+        String dateFormat = "yyyy-MM-dd HH:mm:ss";
         String lastmodifiedtime = "";
-        SimpleDateFormat sdf = new SimpleDateFormat(datefromate);
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
         String currenttime = "";
         String type = "";
         String NumberOfDir = "";
@@ -391,7 +387,7 @@ public class Server {
 
             //get size which we can directly read
             length = file.length();
-            size = convertthesize((double) length);
+            size = convertSize((double) length);
 
             //get last modified time
             lastmodifiedtime = sdf.format(file.lastModified());

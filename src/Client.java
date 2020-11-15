@@ -4,7 +4,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
@@ -114,20 +113,19 @@ public class Client {
         inFile.close();
     }
 
-    public String download() throws IOException {
+    public void download(String filePath) throws IOException {
         String reply = getReply();
-        if (reply.equals("Can not download directory")) {
-            return reply;
-        }
-
         String[] fileInfo = reply.split(">");
         System.out.println(fileInfo[0] + " " + fileInfo[1]);
-        File file = new File("C:\\Users\\e8252125\\Desktop\\" + fileInfo[0]);
+        File file = new File(filePath + "\\" + fileInfo[0]);
 
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
-        int transCnt = size / 1024 + 1;
+        int transCnt = 0;
+        if (size > 0) {
+            transCnt = size / 1024 + 1;
+        }
         for (int i = 0; i < transCnt; i++) {
             byte[] content = new byte[1024];
             int len2 = in.readInt();
@@ -136,18 +134,5 @@ public class Client {
             size -= 1024;
         }
         outFile.close();
-        return "One file received";
-    }
-
-    public void rename() throws IOException {
-        Scanner in = new Scanner(System.in);
-        System.out.print("The file exists. If you want to cancel, please input yes, otherwise please input a new name: ");
-        sendMsg(in.nextLine());
-        String r = getReply();
-        if (r.equals("The file exists. please input a new name: ")) {
-            rename();
-        } else {
-            System.out.println(r);
-        }
     }
 }
