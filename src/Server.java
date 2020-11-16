@@ -29,7 +29,6 @@ public class Server {
         //UDP socket
         Thread udp = new Thread(() -> {
             try {
-                int i = 0;
                 while (true) {
                     DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
                     udpSocket.receive(packet);
@@ -37,14 +36,9 @@ public class Server {
                     String msg = new String(data, 0, packet.getLength());
 
                     if (msg.equals("Finding server...")) {
-                        System.out.println("Request" + i + " from:");
-                        System.out.println(packet.getAddress());
-                        System.out.println(packet.getPort());
-
+                        System.out.println(packet.getAddress() + " is finding server");
                         String reply = "availableServer " + System.getenv("COMPUTERNAME");
-                        System.out.println(reply);
                         udpSocket.send(new DatagramPacket(reply.getBytes(), reply.length(), packet.getAddress(), packet.getPort()));
-                        i++;
                     }
                 }
             } catch (IOException e) {

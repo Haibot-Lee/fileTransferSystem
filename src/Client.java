@@ -53,7 +53,7 @@ public class Client {
                     }
                 }
             } catch (IOException e) {
-                System.err.println("socket closed");
+                System.out.println("socket closed");
                 break;
             }
         }

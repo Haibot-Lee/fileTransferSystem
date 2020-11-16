@@ -54,14 +54,15 @@ public class UserInterface {
         findServer.add(serversLabel, s0);
 
         JList<String> serverList = new JList<String>();
-//        String[] list = {};
-//        try {
-//            user.broadcasts(3);
-//            list = user.getServer();
-//        } catch (IOException ioException) {
-//            ioException.printStackTrace();
-//        }
-//        serverList.setListData(list);
+        String[] list = {};
+        try {
+            user.broadcasts(3);
+            list = user.getServer();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        serverList.setListData(list);
+
         JScrollPane jsp = new JScrollPane(serverList);
         GridBagConstraints s1 = new GridBagConstraints();
         s1.gridy = 1;
@@ -156,8 +157,8 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-//                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
-                    user.login("127.0.0.1", "amy", "123");
+                    user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
+//                    user.login("127.0.0.1", "amy", "123");
                     String reply = user.getReply();
                     if (reply.equals("accept")) {
                         loginPage.setVisible(false);
@@ -218,7 +219,6 @@ public class UserInterface {
         }
 
         //ActionListeners
-
         //get the path of file tree
         fileTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -249,11 +249,6 @@ public class UserInterface {
                     } else {
                         createAt = parentTreePath;
                     }
-
-                    System.out.println(currentNode);
-                    System.out.println(currentTreePath);
-                    System.out.println(createAt);
-                    System.out.println(parentTreePath);
                 }
             }
         });
@@ -315,6 +310,9 @@ public class UserInterface {
                     if (!file.exists()) {
                         file = null;
                         display = "File does not exists!";
+                    } else if (file.isDirectory()) {
+                        file = null;
+                        display = "Can not upload directory";
                     }
                 }
 
@@ -424,7 +422,7 @@ public class UserInterface {
                     try {
                         //this "while" is used to avoid the empty name during using
                         while (newName.equals("")) {
-                            newName = JOptionPane.showInputDialog(homePage, display);
+                            newName = JOptionPane.showInputDialog(homePage, display, currentNode);
                             //to handle cancel option
                             if (newName == null) return;
 
@@ -534,8 +532,8 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\mrli\\Desktop", "members.txt");
-//                new Server(args[0], args[1]);
+//                new Server("", "members.txt");
+                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
             }
