@@ -27,6 +27,7 @@ public class UserInterface {
 
     public UserInterface() {
         user = new Client();
+
         //login first
         loginPage();
     }
@@ -444,8 +445,10 @@ public class UserInterface {
 
                             if (!newName.equals("")) {
                                 user.sendMsg("rename>" + currentTreePath + ">" + parentTreePath + "\\" + newName);
+                                String userreply = user.getReply();
+                                System.out.println(userreply);
 
-                                if (user.getReply().equals("Renamed successfully")) {
+                                if (userreply.equals("Renamed successfully")) {
                                     JOptionPane.showMessageDialog(homePage, "Renamed successfully", "Rename", JOptionPane.INFORMATION_MESSAGE);
                                 } else {
                                     display = "The file exists. please input a new name: ";
@@ -548,8 +551,8 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-//                new Server("", "members.txt");
-                new Server(args[0], args[1]);
+                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
+//                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -315,20 +315,16 @@ public class Server {
     }
 
     private void rename(String sourceName, String destName, Socket memberSocket) throws IOException {
-        String reply = "";
-
         if (new File(sharedDir + sourceName).exists()) {
             if (!new File(sharedDir + destName).exists()) {
                 new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
-                reply = "Renamed successfully";
+                reply ("Renamed successfully",memberSocket);
             } else {
                 reply("The file exists. please input a new name: ", memberSocket);
             }
         } else {
-            reply = "The file doesn't exist";
+            reply ("The file doesn't exist",memberSocket);
         }
-
-        reply(reply, memberSocket);
     }
 
     //calculate the size of the file and convert it to the version which we can directly read
