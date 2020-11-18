@@ -4,7 +4,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -15,7 +14,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
-public class UserInterface extends JFrame{
+public class UserInterface {
     Client user;
     JFrame loginPage;
     JFrame homePage;
@@ -473,27 +472,6 @@ public class UserInterface extends JFrame{
         buttons[6].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                if (!currentTreePath.equals("")) {
-//                    String[] details = {};
-//                    try {
-//                        user.sendMsg("detail>" + currentTreePath);
-//                        details = user.getReply().split("\n");
-//                    } catch (IOException ioException) {
-//                        ioException.printStackTrace();
-//                    }
-//
-//                    int rows = details.length;
-//                    JDialog detail = new JDialog(homePage, "Detail");
-//                    Container container = detail.getContentPane();
-//                    container.setLayout(new GridLayout(rows, 1));
-//                    for (int i = 0; i < rows; i++) {
-//                        container.add(new JLabel(details[i]));
-//                    }
-//                    detail.setBounds(new Rectangle(300, 300));
-//                    detail.setVisible(true);
-//                } else {
-//                    JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "Detail", JOptionPane.WARNING_MESSAGE);
-//                }
                 if (!currentTreePath.equals("")) {
                     String[] details;
                     String[][] rowData = new String[0][0];
@@ -501,14 +479,14 @@ public class UserInterface extends JFrame{
                         user.sendMsg("detail>" + currentTreePath);
                         String type = user.getReply();
                         details = user.getReply().split("\n");
-                        if(type.equals("file")){
+                        if (type.equals("file")) {
                             rowData = new String[7][2];
-                            for(int i=0;i<rowData.length;i++) {
+                            for (int i = 0; i < rowData.length; i++) {
                                 rowData[i] = details[i].split(": ");
                             }
-                        }else{
+                        } else {
                             rowData = new String[8][2];
-                            for(int i=0;i<rowData.length;i++) {
+                            for (int i = 0; i < rowData.length; i++) {
                                 rowData[i] = details[i].split(": ");
                             }
                         }
@@ -517,39 +495,31 @@ public class UserInterface extends JFrame{
                         ioException.printStackTrace();
                     }
 
-                    Object[] columnNames = {"Name", "Content"};
+                    Object[] columnNames = {"Attributes", "Content"};
 
-                    JFrame jf = new JFrame("Attributes");
-                    jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
+                    JDialog detail = new JDialog(homePage, "Detail");
                     JPanel panel = new JPanel(new BorderLayout());
 
                     JTable table = new JTable(rowData, columnNames);
-
                     table.setForeground(Color.BLACK);
                     table.setFont(new Font(null, Font.PLAIN, 14));
                     table.setGridColor(Color.GRAY);
-
                     table.getTableHeader().setFont(new Font(null, Font.BOLD, 14));
                     table.getTableHeader().setForeground(Color.BLACK);
                     table.getTableHeader().setResizingAllowed(false);
                     table.getTableHeader().setReorderingAllowed(false);
-
                     table.setRowHeight(30);
-
                     table.getColumnModel().getColumn(0).setPreferredWidth(40);
-
                     table.setPreferredScrollableViewportSize(new Dimension(400, 250));
 
                     JScrollPane scrollPane = new JScrollPane(table);
-
                     panel.add(scrollPane);
+                    detail.setContentPane(panel);
+                    detail.pack();
+                    detail.setLocationRelativeTo(homePage);
+                    detail.setVisible(true);
 
-                    jf.setContentPane(panel);
-                    jf.pack();
-                    jf.setLocationRelativeTo(homePage);
-                    jf.setVisible(true);
-                }else{
+                } else {
                     JOptionPane.showMessageDialog(homePage, "Choose one file that you want to read details first!", "Detail", JOptionPane.WARNING_MESSAGE);
                 }
             }
@@ -609,8 +579,8 @@ public class UserInterface extends JFrame{
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
-//                new Server(args[0], args[1]);
+//                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
+                new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
             }
