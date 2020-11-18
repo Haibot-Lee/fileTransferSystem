@@ -416,9 +416,11 @@ public class Server {
 
             //send the data to the client
             if (file.isFile()) {
+                reply("file",memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
             } else if (file.isDirectory()) {
+                reply("dir",memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + "byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
                         "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
             }
