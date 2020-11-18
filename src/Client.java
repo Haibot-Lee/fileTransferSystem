@@ -113,11 +113,11 @@ public class Client {
         inFile.close();
     }
 
-    public void download(String filePath) throws IOException {
+    public void download(String filePathInServer, String downloadPath) throws IOException {
+        sendMsg("download>" + filePathInServer);
         String reply = getReply();
         String[] fileInfo = reply.split(">");
-        System.out.println(fileInfo[0] + " " + fileInfo[1]);
-        File file = new File(filePath + "\\" + fileInfo[0]);
+        File file = new File(downloadPath + "\\" + fileInfo[0]);
 
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);

@@ -43,10 +43,9 @@ public class UserInterface {
         JPanel loginInfo = new JPanel(new GridBagLayout());
         loginInfo.setBorder(new EmptyBorder(50, 5, 0, 20));
         container.add(findServer);
-        container.add(loginInfo);
 
         //Server list
-        JLabel serversLabel = new JLabel("Available servers:");
+        JLabel serversLabel = new JLabel("Choose one server you want access:");
         GridBagConstraints s0 = new GridBagConstraints();
         s0.gridy = 0;
         s0.weightx = 50;
@@ -147,7 +146,13 @@ public class UserInterface {
         serverList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
+                container.add(loginInfo);
+                loginPage.setVisible(true);
+
                 String ip = serverList.getSelectedValue();
+                if (ip == null) {
+                    return;
+                }
                 ip = ip.substring(ip.lastIndexOf("/") + 1, ip.length() - 1);
                 serverIP.setText(ip);
             }
@@ -157,6 +162,10 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
+                    if (serverIP.getText().equals("") || name.getText().equals("") || (new String(password.getPassword())).equals("")) {
+                        JOptionPane.showMessageDialog(loginPage, "Pleast input the Login information.\n(Input/Choose server, name and password)", "Failed to login", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
 //                    user.login("127.0.0.1", "amy", "123");
                     String reply = user.getReply();
@@ -164,10 +173,10 @@ public class UserInterface {
                         loginPage.setVisible(false);
                         homePage(name.getText());
                     } else {
-                        JOptionPane.showMessageDialog(null, reply, "Failed to login", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(loginPage, reply, "Failed to login", JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (IOException ioException) {
-                    JOptionPane.showMessageDialog(null, ioException, "Failed to login", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(loginPage, ioException, "Failed to login", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -351,23 +360,30 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!currentTreePath.equals("") && !currentNode.getAllowsChildren()) {
-                    String destPath = "";
+                    String downloadPath = "";
                     String display = "Input where you want to download to:\n(eg. C:\\User\\Desktop)";
-                    while (destPath.equals("")) {
-                        destPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
-                        if (destPath == null) return;
-                        File file = new File(destPath);
+                    while (downloadPath.equals("")) {
+                        downloadPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
+                        if (downloadPath == null) return;
+                        File file = new File(downloadPath);
                         if (!file.exists() || !file.isDirectory()) {
                             display = "Position is invalid!\n(eg. C:\\User\\Desktop)";
-                            destPath = "";
+                            downloadPath = "";
                         }
                     }
 
+                    display = "One file downloaded!";
+                    if ((new File(downloadPath + "\\" + currentNode)).exists()) {
+                        int n = JOptionPane.showConfirmDialog(homePage, "File already exists, cover or not?", "Download", JOptionPane.YES_NO_OPTION);
+                        if (n == 0) {
+                            display = "One file Covered!";
+                        } else {
+                            return;
+                        }
+                    }
                     try {
-                        user.sendMsg("download>" + currentTreePath);
-                        user.download(destPath);
-                        JOptionPane.showMessageDialog(homePage, "One file downloaded!", "Download", JOptionPane.INFORMATION_MESSAGE);
-
+                        user.download(currentTreePath, downloadPath);
+                        JOptionPane.showMessageDialog(homePage, display, "Download", JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
