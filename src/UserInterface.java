@@ -1,13 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.event.*;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -167,7 +161,6 @@ public class UserInterface {
                         return;
                     }
                     user.login(serverIP.getText(), name.getText(), new String(password.getPassword()));
-//                    user.login("127.0.0.1", "amy", "123");
                     String reply = user.getReply();
                     if (reply.equals("accept")) {
                         loginPage.setVisible(false);
@@ -264,6 +257,28 @@ public class UserInterface {
             }
         });
 
+        //Expand Node
+        fileTree.addTreeWillExpandListener(new TreeWillExpandListener() {
+            @Override
+            public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+                TreePath path = event.getPath();
+                Object[] paths = path.getPath();
+
+                String current = "";
+                DefaultMutableTreeNode node = null;
+                for (int i = 1; i < paths.length; i++) {
+                    node = (DefaultMutableTreeNode) paths[i];
+                    current += "\\" + node.getUserObject();
+                }
+                getFiles(current, node);
+            }
+
+            @Override
+            public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+
+            }
+        });
+
         //Logout
         buttons[0].addActionListener(new ActionListener() {
             @Override
@@ -312,7 +327,7 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                localFileTree("Choose one file you want to upload");
+//                localFileTree("Choose one file you want to upload");
                 File file = null;
                 String display = "Input one file you want to upload:";
                 while (file == null) {
@@ -564,8 +579,6 @@ public class UserInterface {
                     DefaultMutableTreeNode temp;
                     if (files[i].charAt(0) == 'D') {
                         temp = new DefaultMutableTreeNode(fileName, true);
-                    } else if (files[i].charAt(0) == 'M') {
-                        temp = new DefaultMutableTreeNode(fileName, true);
                     } else {
                         temp = new DefaultMutableTreeNode(fileName, false);
                     }
@@ -577,14 +590,15 @@ public class UserInterface {
         }
     }
 
-    private void localFileTree(String title){
-        JDialog local=new JDialog(homePage,title);
+    private void localFileTree(String title) {
+        JDialog local = new JDialog(homePage, title);
         JPanel panel = new JPanel(new BorderLayout());
         local.setContentPane(panel);
 
         //Tree
-        JTree localTree=new JTree();
-
+        JTree localTree = new JTree();
+//        DefaultTreeModel treeModel = new DefaultTreeModel(root, true);
+//        localTree.setModel(treeModel);
 
         JScrollPane scrollPane = new JScrollPane(localTree);
         panel.add(scrollPane);

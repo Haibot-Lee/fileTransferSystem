@@ -189,18 +189,15 @@ public class Server {
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory()) {
-                    if (f.listFiles() != null && f.listFiles().length > 0) {
-                        reply += "D/";
-                    } else {
-                        reply += "M/";
-                    }
+                    reply += "D/";
                 } else {
                     reply += "F/";
                 }
                 reply += f.getName() + "\n";
             }
+        }else{
+            System.out.println("null dir");
         }
-
 
         reply(reply, memberSocket);
     }
