@@ -195,8 +195,6 @@ public class Server {
                 }
                 reply += f.getName() + "\n";
             }
-        }else{
-            System.out.println("null dir");
         }
 
         reply(reply, memberSocket);

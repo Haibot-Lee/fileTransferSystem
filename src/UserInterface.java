@@ -5,8 +5,12 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 public class UserInterface {
     Client user;
@@ -248,8 +252,6 @@ public class UserInterface {
                     parentTreePath = current;
                     if (currentNode.getAllowsChildren()) {
                         createAt = currentTreePath;
-                        getFiles(currentTreePath, currentNode);
-                        fileTree.expandRow(fileTree.getRowForPath(selectionPath));
                     } else {
                         createAt = parentTreePath;
                     }
@@ -327,49 +329,8 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                localFileTree("Choose one file you want to upload");
-                File file = null;
-                String display = "Input one file you want to upload:";
-                while (file == null) {
-                    String filePath = JOptionPane.showInputDialog(homePage, display, "Upload", JOptionPane.YES_NO_CANCEL_OPTION);
-                    if (filePath == null) return;
-                    file = new File(filePath);
-                    if (!file.exists()) {
-                        file = null;
-                        display = "File does not exists!";
-                    } else if (file.isDirectory()) {
-                        file = null;
-                        display = "Can not upload directory";
-                    }
-                }
-
-                try {
-                    user.sendMsg("upload>" + createAt);
-
-                    String fileInfo = String.format("%s>%d", file.getName(), file.length());
-                    user.sendMsg(fileInfo);
-                    String reply = user.getReply();
-                    if (reply.equals("Exists")) {
-                        int n = JOptionPane.showConfirmDialog(homePage, "File already exists, cover or not?", "Upload", JOptionPane.YES_NO_OPTION);
-                        if (n == 0) {
-                            user.sendMsg("Continue upload");
-                            display = "One file Covered!";
-                        } else {
-                            user.sendMsg("Stop upload");
-                            return;
-                        }
-                    } else {
-                        user.sendMsg("Continue upload");
-                        display = "One file uploaded!";
-                    }
-
-                    user.upload(file);
-                    JOptionPane.showMessageDialog(homePage, display, "Upload", JOptionPane.INFORMATION_MESSAGE);
-                    fileTree = constructTree(fileTree);
-
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+                localFileTree("Choose one file you want to upload", true);
+                homePage.setVisible(false);
             }
         });
 
@@ -378,33 +339,19 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!currentTreePath.equals("") && !currentNode.getAllowsChildren()) {
-                    String downloadPath = "";
-                    String display = "Input where you want to download to:\n(eg. C:\\User\\Desktop)";
-                    while (downloadPath.equals("")) {
-                        downloadPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
-                        if (downloadPath == null) return;
-                        File file = new File(downloadPath);
-                        if (!file.exists() || !file.isDirectory()) {
-                            display = "Position is invalid!\n(eg. C:\\User\\Desktop)";
-                            downloadPath = "";
-                        }
-                    }
-
-                    display = "One file downloaded!";
-                    if ((new File(downloadPath + "\\" + currentNode)).exists()) {
-                        int n = JOptionPane.showConfirmDialog(homePage, "File already exists, cover or not?", "Download", JOptionPane.YES_NO_OPTION);
-                        if (n == 0) {
-                            display = "One file Covered!";
-                        } else {
-                            return;
-                        }
-                    }
-                    try {
-                        user.download(currentTreePath, downloadPath);
-                        JOptionPane.showMessageDialog(homePage, display, "Download", JOptionPane.INFORMATION_MESSAGE);
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
+                    localFileTree("Choose the download location", false);
+                    homePage.setVisible(false);
+//                    String downloadPath = "";
+//                    String display = "Input where you want to download to:\n(eg. C:\\User\\Desktop)";
+//                    while (downloadPath.equals("")) {
+//                        downloadPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
+//                        if (downloadPath == null) return;
+//                        File file = new File(downloadPath);
+//                        if (!file.exists() || !file.isDirectory()) {
+//                            display = "Position is invalid!\n(eg. C:\\User\\Desktop)";
+//                            downloadPath = "";
+//                        }
+//                    }
                 } else if (currentNode.getAllowsChildren()) {
                     JOptionPane.showMessageDialog(homePage, "Can not download directory", "Download", JOptionPane.WARNING_MESSAGE);
                 } else {
@@ -590,27 +537,192 @@ public class UserInterface {
         }
     }
 
-    private void localFileTree(String title) {
-        JDialog local = new JDialog(homePage, title);
-        JPanel panel = new JPanel(new BorderLayout());
-        local.setContentPane(panel);
+    private void upload(File uploadFile, JDialog parentFrame) {
+        try {
+            user.sendMsg("upload>" + createAt);
 
-        //Tree
+            String fileInfo = String.format("%s>%d", uploadFile.getName(), uploadFile.length());
+            user.sendMsg(fileInfo);
+            String reply = user.getReply();
+            String display;
+            if (reply.equals("Exists")) {
+                int n = JOptionPane.showConfirmDialog(parentFrame, "File already exists, cover or not?", "Upload", JOptionPane.YES_NO_OPTION);
+                if (n == 0) {
+                    user.sendMsg("Continue upload");
+                    display = "One file Covered!";
+                } else {
+                    user.sendMsg("Stop upload");
+                    return;
+                }
+            } else {
+                user.sendMsg("Continue upload");
+                display = "One file uploaded!";
+            }
+
+            user.upload(uploadFile);
+            JOptionPane.showMessageDialog(parentFrame, display, "Upload", JOptionPane.INFORMATION_MESSAGE);
+            fileTree = constructTree(fileTree);
+
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+    }
+
+    private void download(String downloadPath, JDialog parentFrame) {
+        String display = "One file downloaded!";
+        if ((new File(downloadPath + "\\" + currentNode)).exists()) {
+            int n = JOptionPane.showConfirmDialog(parentFrame, "File already exists, cover or not?", "Download", JOptionPane.YES_NO_OPTION);
+            if (n == 0) {
+                display = "One file Covered!";
+            } else {
+                return;
+            }
+        }
+        try {
+            user.download(currentTreePath, downloadPath);
+            JOptionPane.showMessageDialog(parentFrame, display, "Download", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+    }
+
+    private void localFileTree(String title, boolean ifUpload) {
+        final String[] destPath = {null};
+
+        JDialog local = new JDialog(new JFrame(), title);
+        local.setSize(new Dimension(400, 400));
+        Container container = local.getContentPane();
+        container.setLayout(new BorderLayout());
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JButton confirm = new JButton("Confirm");
+        JButton cancel = new JButton("Cancel");
+        buttonPanel.add(confirm);
+        buttonPanel.add(cancel);
+        container.add(buttonPanel, BorderLayout.SOUTH);
+
         JTree localTree = new JTree();
-//        DefaultTreeModel treeModel = new DefaultTreeModel(root, true);
-//        localTree.setModel(treeModel);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root", true);
 
+        for (Path disk : FileSystems.getDefault().getRootDirectories()) {
+            DefaultMutableTreeNode diskNode = new DefaultMutableTreeNode(disk.toString(), true);
+            root.add(diskNode);
+        }
+
+        DefaultTreeModel treeModel = new DefaultTreeModel(root, true);
+        localTree.setModel(treeModel);
         JScrollPane scrollPane = new JScrollPane(localTree);
-        panel.add(scrollPane);
+        container.add(scrollPane, BorderLayout.CENTER);
         local.setLocationRelativeTo(homePage);
         local.setVisible(true);
+
+        //ActionListeners
+        //get the path of file tree
+        localTree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                if (!localTree.isSelectionEmpty()) {
+                    TreePath selectionPath = localTree.getSelectionPath();
+                    Object[] paths = selectionPath.getPath();
+
+                    String current = "";
+                    for (int i = 1; i < paths.length; i++) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[i];
+                        current += node.getUserObject();
+                        if (i != 1 && i != paths.length - 1) current += "\\";
+                    }
+                    destPath[0] = current;
+                    System.out.println(current);
+                }
+            }
+        });
+
+        //Expand Node
+        localTree.addTreeWillExpandListener(new TreeWillExpandListener() {
+            @Override
+            public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+                TreePath path = event.getPath();
+                Object[] paths = path.getPath();
+
+                String current = "";
+                DefaultMutableTreeNode node = null;
+                for (int i = 1; i < paths.length; i++) {
+                    node = (DefaultMutableTreeNode) paths[i];
+                    current += node.getUserObject();
+                    if (i != 1) current += "\\";
+                }
+                getLocalFiles(current, node);
+            }
+
+            @Override
+            public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+
+            }
+        });
+
+        //Confirm
+        confirm.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (destPath[0] == null || destPath.equals("")) {
+                    JOptionPane.showMessageDialog(local, "You haven't choose!", "", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    File optionFile = new File(destPath[0]);
+                    if (ifUpload == true) {
+                        if (optionFile.isDirectory()) {
+                            JOptionPane.showMessageDialog(local, "Can not upload directory!", "", JOptionPane.WARNING_MESSAGE);
+                        } else {
+                            upload(optionFile, local);
+                            local.dispose();
+                        }
+                    } else {
+                        if (!optionFile.isDirectory()) {
+                            JOptionPane.showMessageDialog(local, "Can not download here!", "", JOptionPane.WARNING_MESSAGE);
+                        } else {
+                            download(destPath[0], local);
+                            local.dispose();
+                        }
+                    }
+                }
+            }
+        });
+
+        //Cancel
+        cancel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                local.dispose();
+                homePage.setVisible(true);
+            }
+        });
+
+        local.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                homePage.setVisible(true);
+            }
+        });
+    }
+
+    private void getLocalFiles(String path, DefaultMutableTreeNode node) {
+        File[] files = (new File(path)).listFiles();
+
+        if (files != null) {
+            for (File f : files) {
+                DefaultMutableTreeNode temp;
+                if (f.isDirectory()) {
+                    temp = new DefaultMutableTreeNode(f.getName(), true);
+                } else {
+                    temp = new DefaultMutableTreeNode(f.getName(), false);
+                }
+                node.add(temp);
+            }
+        }
     }
 
     public static void main(String[] args) {
         //start Server
         Thread server = new Thread(() -> {
             try {
-//                new Server("C:\\Users\\Lyman Zuo\\Desktop\\test", "members.txt");
                 new Server(args[0], args[1]);
             } catch (IOException e) {
                 e.printStackTrace();
