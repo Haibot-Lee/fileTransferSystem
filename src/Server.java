@@ -186,18 +186,21 @@ public class Server {
         String reply = "";
 
         File[] files = path.listFiles();
-        for (File f : files) {
-            if (f.isDirectory()) {
-                if (f.listFiles() != null && f.listFiles().length > 0) {
-                    reply += "D/";
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    if (f.listFiles() != null && f.listFiles().length > 0) {
+                        reply += "D/";
+                    } else {
+                        reply += "M/";
+                    }
                 } else {
-                    reply += "M/";
+                    reply += "F/";
                 }
-            } else {
-                reply += "F/";
+                reply += f.getName() + "\n";
             }
-            reply += f.getName() + "\n";
         }
+
 
         reply(reply, memberSocket);
     }
@@ -318,12 +321,12 @@ public class Server {
         if (new File(sharedDir + sourceName).exists()) {
             if (!new File(sharedDir + destName).exists()) {
                 new File(sharedDir + sourceName).renameTo(new File(sharedDir + destName));
-                reply ("Renamed successfully",memberSocket);
+                reply("Renamed successfully", memberSocket);
             } else {
                 reply("The file exists. please input a new name: ", memberSocket);
             }
         } else {
-            reply ("The file doesn't exist",memberSocket);
+            reply("The file doesn't exist", memberSocket);
         }
     }
 
@@ -416,11 +419,11 @@ public class Server {
 
             //send the data to the client
             if (file.isFile()) {
-                reply("file",memberSocket);
+                reply("file", memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
             } else if (file.isDirectory()) {
-                reply("dir",memberSocket);
+                reply("dir", memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + "byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
                         "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
             }

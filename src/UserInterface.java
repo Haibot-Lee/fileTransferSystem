@@ -255,6 +255,8 @@ public class UserInterface {
                     parentTreePath = current;
                     if (currentNode.getAllowsChildren()) {
                         createAt = currentTreePath;
+                        getFiles(currentTreePath, currentNode);
+                        fileTree.expandRow(fileTree.getRowForPath(selectionPath));
                     } else {
                         createAt = parentTreePath;
                     }
@@ -310,6 +312,7 @@ public class UserInterface {
         buttons[2].addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                localFileTree("Choose one file you want to upload");
                 File file = null;
                 String display = "Input one file you want to upload:";
                 while (file == null) {
@@ -559,20 +562,34 @@ public class UserInterface {
                 for (int i = 0; i < files.length; i++) {
                     String fileName = files[i].substring(files[i].lastIndexOf("/") + 1);
                     DefaultMutableTreeNode temp;
-                    if (files[i].charAt(0) == 'D' || files[i].charAt(0) == 'M') {
+                    if (files[i].charAt(0) == 'D') {
+                        temp = new DefaultMutableTreeNode(fileName, true);
+                    } else if (files[i].charAt(0) == 'M') {
                         temp = new DefaultMutableTreeNode(fileName, true);
                     } else {
                         temp = new DefaultMutableTreeNode(fileName, false);
                     }
                     node.add(temp);
-                    if (files[i].charAt(0) == 'D') {
-                        getFiles(path + "\\" + fileName, temp);
-                    }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void localFileTree(String title){
+        JDialog local=new JDialog(homePage,title);
+        JPanel panel = new JPanel(new BorderLayout());
+        local.setContentPane(panel);
+
+        //Tree
+        JTree localTree=new JTree();
+
+
+        JScrollPane scrollPane = new JScrollPane(localTree);
+        panel.add(scrollPane);
+        local.setLocationRelativeTo(homePage);
+        local.setVisible(true);
     }
 
     public static void main(String[] args) {
