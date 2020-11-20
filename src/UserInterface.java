@@ -3,10 +3,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -38,9 +35,10 @@ public class UserInterface {
         container.setLayout(new GridLayout(1, 2));
         JPanel findServer = new JPanel(new GridBagLayout());
         findServer.setBorder(new EmptyBorder(0, 5, 0, 5));
+        container.add(findServer);
         JPanel loginInfo = new JPanel(new GridBagLayout());
         loginInfo.setBorder(new EmptyBorder(50, 5, 0, 20));
-        container.add(findServer);
+        container.add(loginInfo);
 
         //Server list
         JLabel serversLabel = new JLabel("Choose one server you want access:");
@@ -53,7 +51,7 @@ public class UserInterface {
         JList<String> serverList = new JList<String>();
         String[] list = {};
         try {
-            user.broadcasts(3);
+            user.broadcasts(5);
             list = user.getServer();
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -127,6 +125,18 @@ public class UserInterface {
         loginInfo.add(submit, l6);
 
         //ActionListeners
+        serverList.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                String ip = serverList.getSelectedValue();
+                if (ip == null) {
+                    return;
+                }
+                ip = ip.substring(ip.lastIndexOf("/") + 1, ip.length() - 1);
+                serverIP.setText(ip);
+            }
+        });
+
         broadcast.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -138,21 +148,6 @@ public class UserInterface {
                     ioException.printStackTrace();
                 }
                 serverList.setListData(list);
-            }
-        });
-
-        serverList.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                container.add(loginInfo);
-                loginPage.setVisible(true);
-
-                String ip = serverList.getSelectedValue();
-                if (ip == null) {
-                    return;
-                }
-                ip = ip.substring(ip.lastIndexOf("/") + 1, ip.length() - 1);
-                serverIP.setText(ip);
             }
         });
 
@@ -231,8 +226,9 @@ public class UserInterface {
             public void valueChanged(TreeSelectionEvent e) {
                 if (!fileTree.isSelectionEmpty()) {
                     TreePath selectionPath = fileTree.getSelectionPath();
-                    Object[] paths = selectionPath.getPath();
+                    fileTree.expandRow(fileTree.getRowForPath(selectionPath));
 
+                    Object[] paths = selectionPath.getPath();
                     if (paths.length == 1) {
                         currentNode = (DefaultMutableTreeNode) paths[0];
                         currentTreePath = "";
@@ -341,17 +337,6 @@ public class UserInterface {
                 if (!currentTreePath.equals("") && !currentNode.getAllowsChildren()) {
                     localFileTree("Choose the download location", false);
                     homePage.setVisible(false);
-//                    String downloadPath = "";
-//                    String display = "Input where you want to download to:\n(eg. C:\\User\\Desktop)";
-//                    while (downloadPath.equals("")) {
-//                        downloadPath = JOptionPane.showInputDialog(homePage, display, "Download", JOptionPane.YES_NO_CANCEL_OPTION);
-//                        if (downloadPath == null) return;
-//                        File file = new File(downloadPath);
-//                        if (!file.exists() || !file.isDirectory()) {
-//                            display = "Position is invalid!\n(eg. C:\\User\\Desktop)";
-//                            downloadPath = "";
-//                        }
-//                    }
                 } else if (currentNode.getAllowsChildren()) {
                     JOptionPane.showMessageDialog(homePage, "Can not download directory", "Download", JOptionPane.WARNING_MESSAGE);
                 } else {
@@ -372,14 +357,14 @@ public class UserInterface {
                             int n = JOptionPane.showConfirmDialog(homePage, "It is not empty, do you want to delete it anyway?", "Rename", JOptionPane.YES_NO_OPTION);
                             if (n == 0) {
                                 user.sendMsg("yes");
-                                JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(homePage, user.getReply(), "Delete", JOptionPane.INFORMATION_MESSAGE);
                                 fileTree = constructTree(fileTree);
                             } else {
                                 user.sendMsg("no");
-                                JOptionPane.showMessageDialog(homePage, user.getReply(), "", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(homePage, user.getReply(), "Delete", JOptionPane.INFORMATION_MESSAGE);
                             }
                         } else {
-                            JOptionPane.showMessageDialog(homePage, getMsg, "", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(homePage, getMsg, "Delete", JOptionPane.INFORMATION_MESSAGE);
                             fileTree = constructTree(fileTree);
                         }
                     } catch (IOException ioException) {
@@ -602,6 +587,7 @@ public class UserInterface {
 
         JTree localTree = new JTree();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root", true);
+        localTree.setRootVisible(false);
 
         for (Path disk : FileSystems.getDefault().getRootDirectories()) {
             DefaultMutableTreeNode diskNode = new DefaultMutableTreeNode(disk.toString(), true);
@@ -622,8 +608,9 @@ public class UserInterface {
             public void valueChanged(TreeSelectionEvent e) {
                 if (!localTree.isSelectionEmpty()) {
                     TreePath selectionPath = localTree.getSelectionPath();
-                    Object[] paths = selectionPath.getPath();
+                    localTree.expandRow(localTree.getRowForPath(selectionPath));
 
+                    Object[] paths = selectionPath.getPath();
                     String current = "";
                     for (int i = 1; i < paths.length; i++) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[i];
@@ -663,7 +650,7 @@ public class UserInterface {
         confirm.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (destPath[0] == null || destPath.equals("")) {
+                if (destPath[0] == null || destPath[0].equals("")) {
                     JOptionPane.showMessageDialog(local, "You haven't choose!", "", JOptionPane.WARNING_MESSAGE);
                 } else {
                     File optionFile = new File(destPath[0]);
@@ -691,11 +678,15 @@ public class UserInterface {
             @Override
             public void actionPerformed(ActionEvent e) {
                 local.dispose();
-                homePage.setVisible(true);
             }
         });
 
         local.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                homePage.setVisible(true);
+            }
+
             @Override
             public void windowClosed(WindowEvent e) {
                 homePage.setVisible(true);
@@ -725,7 +716,7 @@ public class UserInterface {
             try {
                 new Server(args[0], args[1]);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println(e);
             }
         });
         server.start();
