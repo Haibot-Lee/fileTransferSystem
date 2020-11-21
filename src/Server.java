@@ -260,13 +260,21 @@ public class Server {
 
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
-        while (fileSize > 0) {
+
+        int i = 0;
+        while (fileSize >= 1024) {
+            System.out.println(i);
             byte[] buffer = new byte[1024];
             int len = inFile.read(buffer);
             fileSize -= len;
-            out.writeInt(len);
-            out.write(buffer, 0, len);
+            out.write(buffer, 0, buffer.length);
+            i++;
         }
+        System.out.println(fileSize);
+        byte[] buffer = new byte[(int) fileSize];
+        inFile.read(buffer);
+        out.write(buffer, 0, buffer.length);
+
         inFile.close();
     }
 
