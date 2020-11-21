@@ -87,6 +87,7 @@ public class Client {
         DataInputStream in = new DataInputStream(tcpSocket.getInputStream());
         try {
             int len = in.readInt();
+            System.out.println(len);
             byte[] buffer = new byte[len];
             in.read(buffer, 0, len);
             reply = new String(buffer, 0, len);
@@ -103,13 +104,14 @@ public class Client {
         long fileSize = file.length();
         DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
-        while (fileSize > 0) {
+        while (fileSize >= 1024) {
             byte[] buffer = new byte[1024];
-            int len = inFile.read(buffer);
-            fileSize -= len;
-            out.writeInt(len);
-            out.write(buffer, 0, len);
+            fileSize -= buffer.length;
+            out.writeInt(buffer.length);
+            out.write(buffer, 0, buffer.length);
         }
+        byte[] buffer = new byte[(int) fileSize];
+        out.write(buffer, 0, buffer.length);
         inFile.close();
     }
 
@@ -124,15 +126,19 @@ public class Client {
         int size = Integer.parseInt(fileInfo[1]);
         int transCnt = 0;
         if (size > 0) {
-            transCnt = size / 1024 + 1;
+            transCnt = size / 1024;
         }
+
         for (int i = 0; i < transCnt; i++) {
             byte[] content = new byte[1024];
-            int len2 = in.readInt();
-            in.read(content, 0, len2);
-            outFile.write(content, 0, len2);
+            in.read(content, 0, content.length);
+            outFile.write(content, 0, content.length);
             size -= 1024;
         }
+
+        byte[] content = new byte[size];
+        in.read(content, 0, content.length);
+        outFile.write(content, 0, content.length);
         outFile.close();
     }
 }
