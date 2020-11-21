@@ -133,15 +133,19 @@ public class Client {
         int size = Integer.parseInt(fileInfo[1]);
         int transCnt = 0;
         if (size > 0) {
-            transCnt = size / 1024 + 1;
+            transCnt = size / 1024;
         }
+
         for (int i = 0; i < transCnt; i++) {
             byte[] content = new byte[1024];
-            int len2 = in.readInt();
-            in.read(content, 0, len2);
-            outFile.write(content, 0, len2);
+            in.read(content, 0, content.length);
+            outFile.write(content, 0, content.length);
             size -= 1024;
         }
+
+        byte[] content = new byte[size];
+        in.read(content, 0, content.length);
+        outFile.write(content, 0, content.length);
         outFile.close();
     }
 }

@@ -235,18 +235,26 @@ public class Server {
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
         int size = Integer.parseInt(fileInfo[1]);
+        System.out.println("fileInfo[1]: " + size);
         int transCnt = 0;
         if (size > 0) {
-            transCnt = size / 1024 + 1;
+            transCnt = size / 1024;
         }
-        for (int i = 0; i < transCnt; i++) {
 
+        for (int i = 0; i < transCnt; i++) {
             byte[] content = new byte[1024];
-            int len = in.readInt();
-            in.read(content, 0, len);
-            outFile.write(content, 0, len);
+            System.out.println("times: "+i);
+            System.out.println(content.length);
+            in.read(content, 0, content.length);
+            outFile.write(content, 0, content.length);
             size -= 1024;
         }
+        System.out.println("before last");
+        System.out.println("size:"+size);
+        byte[] content = new byte[size];
+        in.read(content, 0, content.length);
+        outFile.write(content, 0, content.length);
+        System.out.println("after the last");
         outFile.close();
     }
 
