@@ -714,7 +714,8 @@ public class UserInterface {
         //start Server
         Thread server = new Thread(() -> {
             try {
-                new Server(args[0], args[1]);
+                //new Server(args[0], args[1]);
+                new Server("C:\\Users\\e8250297","members.txt");
             } catch (IOException e) {
                 System.out.println(e);
             }

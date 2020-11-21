@@ -373,10 +373,6 @@ public class Server {
             //get the position
             root = fileName;
 
-            //get size which we can directly read
-            length = file.length();
-            size = convertSize((double) length);
-
             //get last modified time
             lastmodifiedtime = sdf.format(file.lastModified());
 
@@ -414,10 +410,17 @@ public class Server {
 
             //send the data to the client
             if (file.isFile()) {
+                //get size which we can directly read
+                length = file.length();
+                size = convertSize((double) length);
+
                 reply("file", memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + " byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime
                         + "\ninterview time: " + currenttime;
             } else if (file.isDirectory()) {
+                length = getTotalSizeOfFilesInDir(file);
+                size = convertSize((double) length);
+
                 reply("dir", memberSocket);
                 reply = "type: " + type + "\nname: " + name + "\nposition: " + root + "\nsize: " + size + "(" + length + "byte(s))" + "\ncreate time: " + createdtime + "\nlast modified time: " + lastmodifiedtime +
                         "\ncontent: " + NumberOfFile + " file(s) and " + NumberOfDir + " folder(s)." + "\ninterview time: " + currenttime;
@@ -427,5 +430,16 @@ public class Server {
         }
 
         reply(reply, memberSocket);
+    }
+
+    private long getTotalSizeOfFilesInDir(final File file) {
+        if (file.isFile())
+            return file.length();
+        final File[] children = file.listFiles();
+        long total = 0;
+        if (children != null)
+            for (final File child : children)
+                total += getTotalSizeOfFilesInDir(child);
+        return total;
     }
 }
