@@ -168,7 +168,7 @@ public class Server {
                     detail(options[1], memberSocket);
                     break;
                 default:
-                    reply("Invalid option", memberSocket);
+                    System.out.println("Invalid option");
                     break;
             }
         }
@@ -234,21 +234,17 @@ public class Server {
 
         DataInputStream in = new DataInputStream(memberSocket.getInputStream());
         FileOutputStream outFile = new FileOutputStream(file);
-        int size = Integer.parseInt(fileInfo[1]);
-        int transCnt = 0;
-        if (size > 0) {
-            transCnt = size / 1024;
+        long fileSize = Long.parseLong(fileInfo[1]);
+        byte[] content = new byte[1024];
+        while (fileSize >= 1024) {
+            int len = in.read(content, 0, content.length);
+            outFile.write(content, 0, len);
+            fileSize -= len;
         }
-
-        for (int i = 0; i < transCnt; i++) {
-            byte[] content = new byte[1024];
-            in.read(content, 0, content.length);
-            outFile.write(content, 0, content.length);
-            size -= 1024;
+        if (fileSize > 0) {
+            int len = in.read(content, 0, (int) fileSize);
+            outFile.write(content, 0, len);
         }
-        byte[] content = new byte[size];
-        in.read(content, 0, content.length);
-        outFile.write(content, 0, content.length);
         outFile.close();
     }
 
@@ -263,15 +259,17 @@ public class Server {
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
 
+        byte[] buffer = new byte[1024];
         while (fileSize >= 1024) {
-            byte[] buffer = new byte[1024];
             int len = inFile.read(buffer);
+            out.write(buffer, 0, len);
             fileSize -= len;
-            out.write(buffer, 0, buffer.length);
         }
-        byte[] buffer = new byte[(int) fileSize];
-        inFile.read(buffer);
-        out.write(buffer, 0, buffer.length);
+        if (fileSize > 0) {
+            int len = inFile.read(buffer);
+            out.write(buffer, 0, len);
+        }
+
         inFile.close();
     }
 
