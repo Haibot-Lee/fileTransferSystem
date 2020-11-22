@@ -103,7 +103,6 @@ public class Client {
         long fileSize = file.length();
         DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
-
         byte[] buffer = new byte[1024];
         while (fileSize >= 1024) {
             int len = inFile.read(buffer);
@@ -111,10 +110,11 @@ public class Client {
             fileSize -= len;
         }
         if (fileSize > 0) {
+            System.out.println(fileSize);
             int len = inFile.read(buffer);
+            System.out.println(len);
             out.write(buffer, 0, len);
         }
-
         inFile.close();
     }
 

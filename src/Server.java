@@ -168,6 +168,7 @@ public class Server {
                     detail(options[1], memberSocket);
                     break;
                 default:
+                    //unreachable
                     System.out.println("Invalid option");
                     break;
             }
@@ -250,7 +251,6 @@ public class Server {
 
     private void download(String path, Socket memberSocket) throws IOException {
         File file = new File(sharedDir + path);
-
         String fileName = file.getName();
         long fileSize = file.length();
         String fileInfo = String.format("%s>%d", fileName, fileSize);
@@ -258,7 +258,6 @@ public class Server {
 
         DataOutputStream out = new DataOutputStream(memberSocket.getOutputStream());
         FileInputStream inFile = new FileInputStream(file);
-
         byte[] buffer = new byte[1024];
         while (fileSize >= 1024) {
             int len = inFile.read(buffer);
@@ -269,7 +268,6 @@ public class Server {
             int len = inFile.read(buffer);
             out.write(buffer, 0, len);
         }
-
         inFile.close();
     }
 
